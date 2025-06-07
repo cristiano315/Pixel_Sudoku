@@ -3,11 +3,14 @@ package com.pera.sudoku.ui.views
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.pera.sudoku.ui.theme.ContainerColor
 import com.pera.sudoku.ui.theme.ContentColor
 
@@ -19,9 +22,15 @@ fun GameView(modifier: Modifier = Modifier, isPortrait: Boolean){
             modifier = modifier.fillMaxSize().background(ContainerColor),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Ciao")
+            Text("Ciao", color = ContentColor)
+            Text("Bella", fontSize = 20.sp)
         }
     }
+}
+
+@Composable
+fun SudokuGrid(){
+    
 }
 
 @Preview
