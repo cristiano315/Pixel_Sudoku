@@ -1,5 +1,6 @@
 package com.pera.sudoku.model
 
+//api
 data class Grid(
     val difficulty: String,
     val solution: List<List<Int>>,
@@ -21,3 +22,19 @@ enum class Difficulties{
     Medium,
     Easy
 }
+
+//for viewModel
+data class Cell(
+    val row: Int,
+    val col: Int,
+    val value: Int,
+    val isEditable: Boolean
+)
+
+//data class Cells(
+//    val cells: List(9){ row ->
+//        List(9) { col ->
+//            Cell(row= row, col = col, value = null, isEditable = true)
+//        }
+//    }
+//)
