@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Sudoku</string>
+    <string name="time">Time: %1$s</string>
+    <string name="loading">Loading</string>
 </resources>

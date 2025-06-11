@@ -7,17 +7,31 @@ data class Grid(
     val value: List<List<Int>>
 )
 
+val defaultMatrix: List<List<Int>> = List(9) { List(9) { 0 } }
+
+val emptyGrid = Grid(
+    difficulty = "easy",
+    solution = defaultMatrix,
+    value = defaultMatrix
+)
+
 data class NewBoard(
     val grids: List<Grid>,
     val message: String,
     val results: Int
 )
 
+val emptyBoard = NewBoard(
+    grids = listOf(emptyGrid),
+    message = "",
+    results = 0
+)
+
 data class Board(
     val newboard: NewBoard
 )
 
-enum class Difficulties{
+enum class Difficulties {
     Hard,
     Medium,
     Easy

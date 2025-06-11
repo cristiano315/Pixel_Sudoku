@@ -11,11 +11,11 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object AppModule{
+object AppModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(): Retrofit{
+    fun provideRetrofit(): Retrofit {
         return Retrofit.Builder()
             .baseUrl("https://sudoku-api.vercel.app/api/dosuku/")
             .addConverterFactory(GsonConverterFactory.create())
@@ -24,7 +24,7 @@ object AppModule{
 
     @Provides
     @Singleton
-    fun provideApiService(retrofit: Retrofit): ApiService{
+    fun provideApiService(retrofit: Retrofit): ApiService {
         return retrofit.create(ApiService::class.java)
     }
 }

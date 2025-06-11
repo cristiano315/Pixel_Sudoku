@@ -1,57 +1,30 @@
 package com.pera.sudoku
 
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.lifecycleScope
+import androidx.compose.ui.platform.LocalConfiguration
+import com.pera.sudoku.ui.navigation.SudokuNavHost
 import com.pera.sudoku.ui.theme.SudokuTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    //@Inject lateinit var test1234: Testt //remove later
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             SudokuTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                val configuration = LocalConfiguration.current
+                val isPortrait = configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+                SudokuNavHost(isPortrait)
             }
         }
-//        val test: Testt by viewModels()
 //        lifecycleScope.launch {
-//            test.testFun(application)
+//            test1234.testFun(application)
 //        }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    SudokuTheme {
-        Greeting("Android")
     }
 }

@@ -12,3 +12,4 @@ val Pink40 = Color(0xFF7D5260)
 
 val ContainerColor = Color(0xFFFFFFFF)
 val ContentColor = Color(0xFF0a74ff)
+val CellColor = Color.Black
