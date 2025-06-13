@@ -214,14 +214,15 @@ fun SudokuLoading() {
 }
 
 @Composable
-fun NumbersBar(){
+fun NumbersBar() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp)
             .offset(y = 200.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly) {
-        for (value in 1 until 10){
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        for (value in 1 until 10) {
             Button(
                 modifier = Modifier
                     .width(40.dp)
@@ -234,8 +235,10 @@ fun NumbersBar(){
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp),
                 contentPadding = PaddingValues(0.dp),
                 onClick = {}) {
-                Text(text = value.toString(),
-                     style = SudokuTextStyles.numberButton)
+                Text(
+                    text = value.toString(),
+                    style = SudokuTextStyles.numberButton
+                )
             }
         }
     }
