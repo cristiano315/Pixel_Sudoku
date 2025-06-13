@@ -25,7 +25,10 @@ class GameViewModel @Inject constructor(private val repository: SudokuRepository
     private var timerJob: Job? = null
 
     private val _isLoading = MutableStateFlow(false)
-    val isLoading: MutableStateFlow<Boolean> = _isLoading
+    val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _focusedCell = MutableStateFlow(Pair<Int, Int>(0, 0))
+    val focusedCell: StateFlow<Pair<Int, Int>> = _focusedCell
 
     fun startGame() {
         getNewBoard()
@@ -50,6 +53,10 @@ class GameViewModel @Inject constructor(private val repository: SudokuRepository
                 _timer.value += 1 //update timer
             }
         }
+    }
+
+    fun focusCell(row: Int, col: Int){
+        _focusedCell.value = Pair(row, col)
     }
 
     init {
