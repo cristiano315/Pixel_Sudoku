@@ -3,4 +3,8 @@
     <string name="app_name">Sudoku</string>
     <string name="time">Tempo: %1$s</string>
     <string name="loading">Caricamento</string>
+    <string name="errors">Errori:</string>
+    <string name="you_lost">Hai perso!</string>
+    <string name="new_game">Nuova partita</string>
+    <string name="save_and_quit">Salva ed esci</string>
 </resources>

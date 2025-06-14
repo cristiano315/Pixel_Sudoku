@@ -23,8 +23,5 @@ class MainActivity : ComponentActivity() {
                 SudokuNavHost(isPortrait)
             }
         }
-//        lifecycleScope.launch {
-//            test1234.testFun(application)
-//        }
     }
 }

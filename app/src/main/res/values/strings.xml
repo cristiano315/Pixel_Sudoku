@@ -2,4 +2,8 @@
     <string name="app_name">Sudoku</string>
     <string name="time">Time: %1$s</string>
     <string name="loading">Loading</string>
+    <string name="errors">Errors:</string>
+    <string name="you_lost">You lost!</string>
+    <string name="new_game">New game</string>
+    <string name="save_and_quit">Save and quit</string>
 </resources>

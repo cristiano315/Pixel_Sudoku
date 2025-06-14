@@ -1,5 +1,7 @@
 package com.pera.sudoku.ui.views
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,20 +17,29 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pera.sudoku.R
 import com.pera.sudoku.ui.theme.CellBackGroundColor
@@ -42,6 +53,7 @@ import com.pera.sudoku.ui.theme.cellSize
 import com.pera.sudoku.ui.theme.cellThickBorder
 import com.pera.sudoku.ui.theme.cellThinBorder
 import com.pera.sudoku.viewmodels.GameViewModel
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -55,6 +67,9 @@ fun GameView(
     val timer = viewModel.timer.collectAsState()
     val isLoading = viewModel.isLoading.collectAsState()
     val focusedCell = viewModel.focusedCell.collectAsState()
+    val errorCount = viewModel.errorCount.collectAsState()
+    val isLost = viewModel.isLost.collectAsState()
+    val errorTrigger = viewModel.errorTrigger.collectAsState()
 
     when {
         isLoading.value -> {
@@ -63,27 +78,60 @@ fun GameView(
 
         !isLoading.value -> {
             if (isPortrait) {
-                Column(
-                    modifier = modifier
-                        .fillMaxSize()
-                        .background(ContainerColor)
-                        .padding(vertical = 30.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    GameTimer(timer.value)
-                    SudokuGrid(
-                        grid = board.value.grids[0].value,
-                        focusedCell = focusedCell.value
-                    ) { row: Int, col: Int ->
-                        viewModel.focusCell(row, col)
+                if(isLost.value){
+                    LoseScreen()
+                }
+                else{
+                    Column(
+                        modifier = modifier
+                            .fillMaxSize()
+                            .background(ContainerColor)
+                            .padding(vertical = 30.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        GameTimer(timer.value)
+                        SudokuGrid(
+                            grid = board.value,
+                            focusedCell = focusedCell.value
+                        ) { row: Int, col: Int ->
+                            viewModel.focusCell(row, col)
+                        }
+                        ErrorBar(errorCount= errorCount.value)
+                        //hints
+                        NumbersButtonBar(
+                            modifier = Modifier.offset(y = 150.dp)
+                        ) {input: Int ->
+                            viewModel.checkInputNumber(input)
+                        }
                     }
-                    //hints
-                    NumbersBar()
+                    ErrorEffect(errorTrigger.value) { viewModel.resetTrigger() }
                 }
             } else {
                 Row {
                     GameTimer(timer.value)
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun LoseScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            modifier = Modifier.offset(y= (-50).dp),
+            text = stringResource(R.string.you_lost),
+            style = SudokuTextStyles.veryBigTitle
+        )
+        Row(modifier = Modifier.padding(top = 0.dp)){
+            Button(onClick = {}) {
+                Text(text = stringResource(R.string.new_game))
+            }
+            Button(onClick = {}) {
+                Text(text = stringResource(R.string.save_and_quit))
             }
         }
     }
@@ -99,7 +147,13 @@ fun SudokuGrid(
         for (row in 0 until 9) {
             Row {
                 for (col in 0 until 9) {
-                    SudokuCell(row, col, grid[row][col], focusedCell) {
+                    SudokuCell(
+                        row = row,
+                        col = col,
+                        value = grid[row][col],
+                        focusedCell = focusedCell,
+                        focusedValue = grid[focusedCell.first][focusedCell.second]
+                    ) {
                         onCellClick(row, col)
                     }
                 }
@@ -114,10 +168,11 @@ fun SudokuCell(
     col: Int,
     value: Int,
     focusedCell: Pair<Int, Int>,
+    focusedValue: Int,
     onCellClick: () -> Unit,
 ) {
     val backGroundColor = { row: Int, col: Int ->
-        if (Pair(row, col) == focusedCell) CellBackGroundFocusedColor
+        if (Pair(row, col) == focusedCell || (value == focusedValue && value != 0)) CellBackGroundFocusedColor
         else if (checkIfRelated(row, col, focusedCell)) CellBackGroundRelatedColor
         else CellBackGroundColor
     }
@@ -155,7 +210,6 @@ fun GameTimer(timer: Long) {
 
 fun Modifier.sudokuCellBorder(row: Int, col: Int): Modifier {
     return this
-        .size(cellSize)
         .drawBehind {
             val stroke =
                 { isThick: Boolean -> if (isThick) cellThickBorder.toPx() else cellThinBorder.toPx() }
@@ -211,12 +265,11 @@ fun SudokuLoading() {
 }
 
 @Composable
-fun NumbersBar() {
+fun NumbersButtonBar(modifier: Modifier = Modifier, onNumberClick: (input: Int) -> Unit) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(10.dp)
-            .offset(y = 200.dp),
+            .padding(10.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         for (value in 1 until 10) {
@@ -231,13 +284,73 @@ fun NumbersBar() {
                 ),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp),
                 contentPadding = PaddingValues(0.dp),
-                onClick = {}) {
+                onClick = { onNumberClick(value) }) {
                 Text(
                     text = value.toString(),
                     style = SudokuTextStyles.numberButton
                 )
             }
         }
+    }
+}
+
+@Composable
+fun ErrorBar(modifier: Modifier = Modifier, errorCount: Int){
+    Row {
+        Text(
+            text = stringResource(R.string.errors),
+            style = SudokuTextStyles.bigTitle)
+        for(i in 0 until errorCount){
+            Box(modifier = Modifier.padding(top = 4.dp),
+                contentAlignment = Alignment.Center){
+                Icon(
+                    modifier = Modifier.size(36.dp),
+                    imageVector = Icons.Filled.Close,
+                    contentDescription = "Error",
+                    tint = Color.Red
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ErrorEffect(
+    trigger: Boolean,
+    onEffectEnd: () -> Unit
+) {
+    val coroutineScope = rememberCoroutineScope()
+
+    val offsetX = remember { Animatable(0f) }
+    val offsetY = remember { Animatable(0f) }
+    val alpha = remember { Animatable(0f) }
+
+    val haptic = LocalHapticFeedback.current
+
+    LaunchedEffect(trigger) {
+        if(trigger){
+            //vibration
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+
+            coroutineScope.launch {
+                //red flash
+                alpha.snapTo(0.6f)
+                alpha.animateTo(
+                    targetValue = 0f,
+                    animationSpec = tween(durationMillis = 300)
+                )
+                onEffectEnd()
+            }
+        }
+    }
+
+    if (alpha.value > 0f){
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Red.copy(alpha = alpha.value))
+                .zIndex(10f)
+        )
     }
 }
 
