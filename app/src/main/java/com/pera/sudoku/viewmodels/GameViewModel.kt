@@ -111,6 +111,8 @@ class GameViewModel @Inject constructor(private val repository: SudokuRepository
         _errorTrigger.value = false
     }
 
+    fun saveGame(){} //placeholder
+
     init {
         startGame()
     }

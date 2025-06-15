@@ -10,9 +10,9 @@ import com.pera.sudoku.ui.views.GameView
 fun SudokuNavHost(isPortrait: Boolean) {
     val navController = rememberNavController()
 
-    NavHost(navController, startDestination = "home") {
-        composable("home") {
-            GameView(isPortrait = isPortrait)
+    NavHost(navController, startDestination = "gameScreen") {
+        composable("gameScreen") {
+            GameView(isPortrait = isPortrait, navController = navController)
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.pera.sudoku.ui.views
 
+import android.app.Activity
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -35,12 +36,14 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.pera.sudoku.R
 import com.pera.sudoku.ui.theme.CellBackGroundColor
 import com.pera.sudoku.ui.theme.CellBackGroundFocusedColor
@@ -60,7 +63,8 @@ import kotlinx.coroutines.launch
 fun GameView(
     modifier: Modifier = Modifier,
     viewModel: GameViewModel = hiltViewModel(),
-    isPortrait: Boolean
+    isPortrait: Boolean,
+    navController: NavController
 ) {
     //LaunchedEffect(Unit) { viewModel.startGame() } need to figure this out
     val board = viewModel.board.collectAsState()
@@ -70,6 +74,7 @@ fun GameView(
     val errorCount = viewModel.errorCount.collectAsState()
     val isLost = viewModel.isLost.collectAsState()
     val errorTrigger = viewModel.errorTrigger.collectAsState()
+    val context = LocalContext.current
 
     when {
         isLoading.value -> {
@@ -78,10 +83,19 @@ fun GameView(
 
         !isLoading.value -> {
             if (isPortrait) {
-                if(isLost.value){
-                    LoseScreen()
-                }
-                else{
+                if (isLost.value) {
+                    LoseScreen(
+                        onNewGame = {
+                            viewModel.saveGame()
+                            navController.navigate("gameScreen") {
+                                popUpTo("gameScreen") { inclusive = true }
+                            }
+                        },
+                        onQuitGame = {
+                            viewModel.saveGame()
+                            (context as? Activity)?.finish()
+                        })
+                } else {
                     Column(
                         modifier = modifier
                             .fillMaxSize()
@@ -96,11 +110,11 @@ fun GameView(
                         ) { row: Int, col: Int ->
                             viewModel.focusCell(row, col)
                         }
-                        ErrorBar(errorCount= errorCount.value)
+                        ErrorBar(errorCount = errorCount.value)
                         //hints
                         NumbersButtonBar(
                             modifier = Modifier.offset(y = 150.dp)
-                        ) {input: Int ->
+                        ) { input: Int ->
                             viewModel.checkInputNumber(input)
                         }
                     }
@@ -116,22 +130,41 @@ fun GameView(
 }
 
 @Composable
-fun LoseScreen() {
+fun LoseScreen(onNewGame: () -> Unit, onQuitGame: () -> Unit) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            modifier = Modifier.offset(y= (-50).dp),
+            modifier = Modifier.offset(y = (-50).dp),
             text = stringResource(R.string.you_lost),
             style = SudokuTextStyles.veryBigTitle
         )
-        Row(modifier = Modifier.padding(top = 0.dp)){
-            Button(onClick = {}) {
-                Text(text = stringResource(R.string.new_game))
+        Row(
+            modifier = Modifier
+                .padding(top = 20.dp)
+        ) {
+            SudokuButton(
+                modifier = Modifier
+                    .width(130.dp)
+                    .offset(x = (-10).dp),
+                onClick = onNewGame
+            ) {
+                Text(
+                    text = stringResource(R.string.new_game),
+                    style = SudokuTextStyles.genericButton
+                )
             }
-            Button(onClick = {}) {
-                Text(text = stringResource(R.string.save_and_quit))
+            SudokuButton(
+                modifier = Modifier
+                    .width(130.dp)
+                    .offset(x = 10.dp),
+                onClick = onQuitGame
+            ) {
+                Text(
+                    text = stringResource(R.string.save_and_quit),
+                    style = SudokuTextStyles.genericButton
+                )
             }
         }
     }
@@ -172,7 +205,11 @@ fun SudokuCell(
     onCellClick: () -> Unit,
 ) {
     val backGroundColor = { row: Int, col: Int ->
-        if (Pair(row, col) == focusedCell || (value == focusedValue && value != 0)) CellBackGroundFocusedColor
+        if (Pair(
+                row,
+                col
+            ) == focusedCell || (value == focusedValue && value != 0)
+        ) CellBackGroundFocusedColor
         else if (checkIfRelated(row, col, focusedCell)) CellBackGroundRelatedColor
         else CellBackGroundColor
     }
@@ -295,16 +332,19 @@ fun NumbersButtonBar(modifier: Modifier = Modifier, onNumberClick: (input: Int) 
 }
 
 @Composable
-fun ErrorBar(modifier: Modifier = Modifier, errorCount: Int){
+fun ErrorBar(modifier: Modifier = Modifier, errorCount: Int) {
     Row {
         Text(
             text = stringResource(R.string.errors),
-            style = SudokuTextStyles.bigTitle)
-        for(i in 0 until errorCount){
-            Box(modifier = Modifier.padding(top = 4.dp),
-                contentAlignment = Alignment.Center){
+            style = SudokuTextStyles.bigTitle
+        )
+        repeat(errorCount) {
+            Box(
+                modifier = modifier.padding(top = 4.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 Icon(
-                    modifier = Modifier.size(36.dp),
+                    modifier = modifier.size(36.dp),
                     imageVector = Icons.Filled.Close,
                     contentDescription = "Error",
                     tint = Color.Red
@@ -321,14 +361,12 @@ fun ErrorEffect(
 ) {
     val coroutineScope = rememberCoroutineScope()
 
-    val offsetX = remember { Animatable(0f) }
-    val offsetY = remember { Animatable(0f) }
     val alpha = remember { Animatable(0f) }
 
     val haptic = LocalHapticFeedback.current
 
     LaunchedEffect(trigger) {
-        if(trigger){
+        if (trigger) {
             //vibration
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
 
@@ -344,7 +382,7 @@ fun ErrorEffect(
         }
     }
 
-    if (alpha.value > 0f){
+    if (alpha.value > 0f) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -357,5 +395,4 @@ fun ErrorEffect(
 @Preview
 @Composable
 fun GamePreview() {
-    GameView(isPortrait = true)
 }
