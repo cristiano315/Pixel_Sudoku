@@ -1,7 +1,9 @@
 package com.pera.sudoku.ui.views
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -31,6 +33,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.pera.sudoku.ui.theme.ContentColor
@@ -151,6 +154,33 @@ fun SudokuButton(
             }
         }
     }
+}
+
+@Composable
+fun PopUpContent(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
+    val scale = remember { Animatable(0f) }
+    val alpha = remember { Animatable(0f) }
+
+    LaunchedEffect(Unit) {
+        //animate title pop up
+        alpha.animateTo(1f, animationSpec = tween(500))
+        scale.animateTo(1.5f, animationSpec = tween(700)) //grow more than actual size
+
+        scale.animateTo(
+            1.0f,
+            animationSpec = tween(300)
+        ) //now shrink back to normal. total time = 1 sec
+    }
+
+    Box(
+        modifier = modifier.graphicsLayer(
+            scaleX = scale.value,
+            scaleY = scale.value,
+            alpha = alpha.value
+        ),
+        content = content,
+        contentAlignment = Alignment.Center
+    )
 }
 
 @Composable

@@ -39,6 +39,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -131,12 +132,14 @@ fun GameView(
 
 @Composable
 fun LoseScreen(onNewGame: () -> Unit, onQuitGame: () -> Unit) {
+    val buttonWidth = 150.dp
+    val buttonHeight = 80.dp
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            modifier = Modifier.offset(y = (-50).dp),
+            modifier = Modifier.offset(y = (-70).dp),
             text = stringResource(R.string.you_lost),
             style = SudokuTextStyles.veryBigTitle
         )
@@ -146,24 +149,28 @@ fun LoseScreen(onNewGame: () -> Unit, onQuitGame: () -> Unit) {
         ) {
             SudokuButton(
                 modifier = Modifier
-                    .width(130.dp)
+                    .width(buttonWidth)
+                    .height(buttonHeight)
                     .offset(x = (-10).dp),
                 onClick = onNewGame
             ) {
                 Text(
                     text = stringResource(R.string.new_game),
-                    style = SudokuTextStyles.genericButton
+                    style = SudokuTextStyles.genericButton,
+                    textAlign = TextAlign.Center
                 )
             }
             SudokuButton(
                 modifier = Modifier
-                    .width(130.dp)
+                    .width(buttonWidth)
+                    .height(buttonHeight)
                     .offset(x = 10.dp),
                 onClick = onQuitGame
             ) {
                 Text(
                     text = stringResource(R.string.save_and_quit),
-                    style = SudokuTextStyles.genericButton
+                    style = SudokuTextStyles.genericButton,
+                    textAlign = TextAlign.Center
                 )
             }
         }

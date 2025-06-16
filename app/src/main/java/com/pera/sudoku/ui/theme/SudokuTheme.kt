@@ -22,6 +22,12 @@ object SudokuTextStyles{
         fontWeight = FontWeight.Bold,
         color = ContentColor
     )
+    val titleScreen = TextStyle(
+        fontFamily = SudokuFont,
+        fontSize = 100.sp,
+        fontWeight = FontWeight.Bold,
+        color = ContentColor
+    )
     val cellNumber = TextStyle(
         fontFamily = SudokuFont,
         fontSize = 35.sp,
@@ -34,7 +40,12 @@ object SudokuTextStyles{
     )
     val genericButton = TextStyle(
         fontFamily = SudokuFont,
-        fontSize = 20.sp,
+        fontSize = 30.sp,
+        color = Color.White
+    )
+    val homeButton = TextStyle(
+        fontFamily = SudokuFont,
+        fontSize = 55.sp,
         color = Color.White
     )
 }

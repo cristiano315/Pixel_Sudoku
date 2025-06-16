@@ -7,4 +7,6 @@
     <string name="you_lost">Hai perso!</string>
     <string name="new_game">Nuova partita</string>
     <string name="save_and_quit">Salva ed esci</string>
+    <string name="start_game">Avvia partita</string>
+    <string name="history">Cronologia</string>
 </resources>

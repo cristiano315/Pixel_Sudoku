@@ -4,7 +4,7 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-06-15T23:14:03.838066300Z">
+        <DropdownSelection timestamp="2025-06-16T01:28:08.948803400Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Foref Fiof\.android\avd\Pixel_6a.avd" />
@@ -18,10 +18,10 @@
       </SelectionState>
       <SelectionState runConfigName="ButtonPreview">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-06-15T23:33:48.139858100Z">
+        <DropdownSelection timestamp="2025-06-15T23:39:22.699376100Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=65W49P9TTOWKU4UK" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Foref Fiof\.android\avd\Pixel_6a.avd" />
             </handle>
           </Target>
         </DropdownSelection>
