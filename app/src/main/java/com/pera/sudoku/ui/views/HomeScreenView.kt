@@ -49,7 +49,9 @@ fun HomeScreenView(
             GenericHomeButton( //start game
                 modifier = Modifier.homeButton(),
                 text = stringResource(R.string.history)
-            ) {}
+            ) {
+                navController.navigate("historyScreen")
+            }
         }
     } else {
         Column(

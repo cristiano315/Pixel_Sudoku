@@ -42,6 +42,9 @@ android {
 }
 
 dependencies {
+    implementation("com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava")
+    implementation(libs.androidx.room.runtime)
+    kapt(libs.androidx.room.compiler)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -54,6 +57,8 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.volley)
     implementation(libs.androidx.lifecycle.livedata)
+    implementation(libs.common)
+    implementation(libs.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -75,4 +80,5 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     androidTestImplementation(libs.hilt.android.testing)
     kaptAndroidTest(libs.hilt.compiler.vversion)
+    implementation(libs.androidx.hilt.navigation.fragment)
 }

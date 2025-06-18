@@ -1,5 +1,9 @@
 package com.pera.sudoku.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import java.util.Date
+
 //api
 data class Grid(
     val difficulty: String,
@@ -37,18 +41,30 @@ enum class Difficulties {
     Easy
 }
 
-//for viewModel
-data class Cell(
-    val row: Int,
-    val col: Int,
-    val value: Int,
-    val isEditable: Boolean
-)
+enum class GameState{
+    LOADING,
+    PLAYING,
+    PAUSED,
+    WON,
+    LOST
+}
 
-//data class Cells(
-//    val cells: List(9){ row ->
-//        List(9) { col ->
-//            Cell(row= row, col = col, value = null, isEditable = true)
-//        }
-//    }
-//)
+enum class Results {
+    Win,
+    Lose
+}
+
+//DB
+@Entity(tableName = "saved_games")
+data class SavedGame(
+    @PrimaryKey(autoGenerate = true) var id: Int,
+    var difficulty: Difficulties,
+    var time: Long,
+    var result: Results,
+    var date: Date
+) {
+    constructor(value: Long) : this(0, Difficulties.Medium, 0L, Results.Lose, Date(0L)){
+        this.time = value
+    }
+}
+
