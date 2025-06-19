@@ -127,13 +127,11 @@ class GameViewModel @Inject constructor(private val repository: SudokuRepository
     fun loseGame(){
         _gameState.value = GameState.LOST
         timerJob?.cancel()
-        saveGame()
     }
 
     fun winGame(){
         _gameState.value = GameState.WON
         timerJob?.cancel()
-        saveGame()
     }
 
     fun resetTrigger(){

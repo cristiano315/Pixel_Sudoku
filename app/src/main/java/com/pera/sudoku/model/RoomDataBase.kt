@@ -26,6 +26,12 @@ interface SavedGameDao{
 
     @Query("SELECT * FROM saved_games WHERE date = :valDate")
     fun loadByDate(valDate: Long): Array<SavedGame>
+
+    @Query("SELECT * FROM saved_games WHERE difficulty = :valDifficulty")
+    fun loadByDifficulty(valDifficulty: String): Array<SavedGame>
+
+    @Query("SELECT * FROM saved_games WHERE result = :valResult")
+    fun loadByResult(valResult: String): Array<SavedGame>
 }
 
 @Database(entities = [SavedGame::class], version = 1)

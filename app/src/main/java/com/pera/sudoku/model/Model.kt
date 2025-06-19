@@ -49,6 +49,16 @@ enum class GameState{
     LOST
 }
 
+enum class SortFilter{
+    TIME_DESCENDING,
+    TIME_ASCENDING
+}
+
+enum class FilterType{
+    DIFFICULTY,
+    RESULT
+}
+
 enum class Results {
     Win,
     Lose

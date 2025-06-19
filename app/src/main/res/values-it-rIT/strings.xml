@@ -10,4 +10,24 @@
     <string name="start_game">Avvia partita</string>
     <string name="history">Cronologia</string>
     <string name="you_won">Hai vinto!</string>
+    <string name="no_games_yet">Ancora nessuna partita</string>
+    <string name="date">"Data: "</string>
+    <string name="difficulty">"Difficoltà: "</string>
+    <string name="time_history">"Tempo: "</string>
+    <string name="win">Vittoria</string>
+    <string name="lose">Sconfitta</string>
+    <string name="easy">Facile</string>
+    <string name="medium">Media</string>
+    <string name="hard">Difficile</string>
+    <string name="delete">Elimina</string>
+    <string name="cancel">Annulla</string>
+    <string name="all">Tutte</string>
+    <string name="difficulty_history">Difficoltà</string>
+    <string name="result">Risultato</string>
+    <string name="wins">Vittorie</string>
+    <string name="losses">Sconfitte</string>
+    <string name="confirm">Confermi?</string>
+    <string name="delete_the_game">Eliminare la partita?</string>
+    <string name="time_lowest">Tempo:\nMinore</string>
+    <string name="time_highest">Tempo:\nMaggiore</string>
 </resources>

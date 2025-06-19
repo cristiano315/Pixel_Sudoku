@@ -48,4 +48,13 @@ object SudokuTextStyles{
         fontSize = 55.sp,
         color = Color.White
     )
+    val gameItem = TextStyle(
+        fontFamily = SudokuFont,
+        fontSize = 30.sp,
+    )
+    val smallGenericButton = TextStyle(
+        fontFamily = SudokuFont,
+        fontSize = 25.sp,
+        color = Color.White
+    )
 }

@@ -9,4 +9,24 @@
     <string name="start_game">Start game</string>
     <string name="history">History</string>
     <string name="you_won">You won!</string>
+    <string name="no_games_yet">No games yet</string>
+    <string name="date">"Date: "</string>
+    <string name="difficulty">"Difficulty: "</string>
+    <string name="time_history">"Time: "</string>
+    <string name="win">Win</string>
+    <string name="lose">Lose</string>
+    <string name="easy">Easy</string>
+    <string name="medium">Medium</string>
+    <string name="hard">Hard</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="all">All</string>
+    <string name="difficulty_history">Difficulty</string>
+    <string name="result">Result</string>
+    <string name="wins">Wins</string>
+    <string name="losses">Losses</string>
+    <string name="confirm">Confirm?</string>
+    <string name="delete_the_game">Delete the game?</string>
+    <string name="time_lowest">Time:\nLowest</string>
+    <string name="time_highest">Time:\nHighest</string>
 </resources>
