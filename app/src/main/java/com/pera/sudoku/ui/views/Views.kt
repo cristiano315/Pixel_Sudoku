@@ -251,6 +251,117 @@ fun SudokuDropDownMenu(
 }
 
 @Composable
+fun SudokuToggleButton(
+    modifier: Modifier = Modifier,
+    onToggle: (Boolean) -> Unit,
+    content: @Composable BoxScope.() -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    var isPressed by remember { mutableStateOf(false) }
+    var isToggled by remember { mutableStateOf(false) }
+
+    LaunchedEffect(interactionSource) {
+        interactionSource.interactions.collectLatest { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> isPressed = true
+                is PressInteraction.Release, is PressInteraction.Cancel -> isPressed = false
+            }
+        }
+    }
+
+    val isActive = isToggled || isPressed
+
+    val buttonColor by animateColorAsState(
+        targetValue = if (isActive) DarkContentColor else ContentColor,
+        label = "buttonColor"
+    )
+
+    val elevation by animateDpAsState(
+        targetValue = if (isActive) 2.dp else 8.dp,
+        label = "elevation"
+    )
+
+    val shape = RoundedCornerShape(12.dp)
+
+    Surface(
+        shape = shape,
+        shadowElevation = elevation,
+        modifier = modifier
+            .width(220.dp)
+            .height(60.dp)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = {
+                    isToggled = !isToggled
+                    onToggle(isToggled)
+                }
+            )
+    ) {
+        val outerBorderSize = 4.dp
+        val innerBorderSize = 2.dp
+        val totalBorderSize = outerBorderSize + innerBorderSize
+
+        Surface(
+            color = DarkContentColor,
+            shape = shape,
+            modifier = Modifier
+                .drawWithContent {
+                    val cornerRadiusPx = 12.dp.toPx()
+                    drawContent()
+                    drawRoundRect(
+                        color = Color.White,
+                        size = size,
+                        cornerRadius = CornerRadius(cornerRadiusPx),
+                        style = Stroke(outerBorderSize.toPx())
+                    )
+                    val inset = innerBorderSize.toPx()
+                    drawRoundRect(
+                        color = Color.Black,
+                        topLeft = Offset(inset, inset),
+                        size = Size(size.width - 2 * inset, size.height - 2 * inset),
+                        cornerRadius = CornerRadius(cornerRadiusPx),
+                        style = Stroke(innerBorderSize.toPx())
+                    )
+                }
+        ) {}
+        BoxWithConstraints {
+            val width = this.maxWidth - totalBorderSize
+            val height =
+                if (isActive) (this.maxHeight - totalBorderSize) else (this.maxHeight - totalBorderSize) * 0.9f
+
+            Surface(
+                color = buttonColor,
+                shape = shape,
+                modifier = Modifier
+                    .width(width)
+                    .height(height)
+                    .offset(x = totalBorderSize / 2, totalBorderSize / 2)
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                    content = content
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Black.copy(alpha = 0.3f),
+                                    Color.Transparent
+                                )
+                            )
+                        )
+                )
+            }
+        }
+    }
+}
+
+@Composable
 @Preview
 fun ButtonPreview(){
     SudokuButton(onClick = {}) { Text("Test", color = Color.White, style = SudokuTextStyles.genericButton)}

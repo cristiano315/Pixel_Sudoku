@@ -1,5 +1,6 @@
 package com.pera.sudoku.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pera.sudoku.model.Difficulties
@@ -44,9 +45,21 @@ class GameViewModel @Inject constructor(private val repository: SudokuRepository
     private val _gameState = MutableStateFlow(GameState.LOADING)
     val gameState: StateFlow<GameState> = _gameState
 
+    //keep track of pause status
+    private val _isPaused = MutableStateFlow(false)
+    val isPaused: MutableStateFlow<Boolean> = _isPaused
+
     //keep track of active cell
     private val _focusedCell = MutableStateFlow(Pair<Int, Int>(0, 0))
     val focusedCell: StateFlow<Pair<Int, Int>> = _focusedCell
+
+    //for annotations
+    private val _isAnnotationActive = MutableStateFlow(false)
+    val isAnnotationActive: MutableStateFlow<Boolean> = _isAnnotationActive
+
+    //annotation valuse
+    private val _cellsAnnotations = MutableStateFlow(List(9) {List(9) { List(9) { false } } })
+    val cellsAnnotations: MutableStateFlow<List<List<List<Boolean>>>> = _cellsAnnotations
 
     //errors
     private val _errorCount = MutableStateFlow(0)
@@ -59,7 +72,6 @@ class GameViewModel @Inject constructor(private val repository: SudokuRepository
     fun startGame() {
         getNewBoard()
         startTimer()
-        countCorrectCells()
     }
 
     fun getNewBoard() {
@@ -70,6 +82,10 @@ class GameViewModel @Inject constructor(private val repository: SudokuRepository
             newBoard = result
             _board.value = result.grids[0].value
             solution = result.grids[0].solution
+
+            countCorrectCells()
+
+            Log.d("Solution", solution.toString()) //for debug
 
             _gameState.value = GameState.PLAYING
         }
@@ -100,26 +116,55 @@ class GameViewModel @Inject constructor(private val repository: SudokuRepository
         val isEmpty = (_board.value[row][col] == 0)
         val solValue = solution[row][col]
         if(isEmpty){
-            if(input == solValue){
-                //rebuild board with updated value
-                _board.value = _board.value.mapIndexed { r, currentRow ->
+            if(!_isAnnotationActive.value){
+                if(input == solValue){
+                    //rebuild board with updated value
+                    _board.value = _board.value.mapIndexed { r, currentRow ->
+                        if (r == row){
+                            currentRow.mapIndexed{ c, currentItem ->
+                                if (c == col) solValue
+                                else currentItem
+                            }
+                        }
+                        else currentRow
+                    }
+                    //rebuild annotations list
+                    _cellsAnnotations.value = _cellsAnnotations.value.mapIndexed { r, currentRow ->
+                        if (r == row){
+                            currentRow.mapIndexed { c, currentList ->
+                                if (c == col) List(9) { false } //remove all annotations
+                                else currentList
+                            }
+                        }
+                        else currentRow
+                    }
+                    correctCells++
+                    if (correctCells == 81){
+                        winGame()
+                    }
+                }
+                else {
+                    _errorCount.value += 1
+                    _errorTrigger.value = true
+                    if(_errorCount.value > maxErrors) loseGame()
+                }
+            }
+            else{ //annotations
+                //rebuild annotations list
+                _cellsAnnotations.value = _cellsAnnotations.value.mapIndexed { r, currentRow ->
                     if (r == row){
-                        currentRow.mapIndexed{ c, currentItem ->
-                            if (c == col) solValue
-                            else currentItem
+                        currentRow.mapIndexed { c, currentList ->
+                            if(c == col){
+                                currentList.mapIndexed { index, currentItem ->
+                                    if(index == (input-1)) !currentItem
+                                    else currentItem
+                                }
+                            }
+                            else currentList
                         }
                     }
                     else currentRow
                 }
-                correctCells++
-                if (correctCells == 81){
-                    winGame()
-                }
-            }
-            else {
-                _errorCount.value += 1
-                _errorTrigger.value = true
-                if(_errorCount.value > maxErrors) loseGame()
             }
         }
     }
@@ -147,6 +192,20 @@ class GameViewModel @Inject constructor(private val repository: SudokuRepository
         viewModelScope.launch(Dispatchers.IO) {
             dao.insert(entry)
         }
+    }
+
+    fun pause(){
+        _isPaused.value = true
+        timerJob?.cancel()
+    }
+
+    fun resume(){
+        _isPaused.value = false
+        startTimer()
+    }
+
+    fun updateAnnotationState(state: Boolean){
+        _isAnnotationActive.value = state
     }
 
     init {

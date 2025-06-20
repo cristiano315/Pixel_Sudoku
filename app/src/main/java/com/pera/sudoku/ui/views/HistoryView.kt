@@ -145,17 +145,22 @@ fun ConfirmDialog(onDismissRequest: () -> Unit, deleteGame: () -> Unit){
             fontSize = 25.sp) },
         confirmButton = {
             SudokuButton(
+                modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     onDismissRequest()
                     deleteGame()
                 }
             ) {
-                Text(text = stringResource(R.string.delete))
+                Text(text = stringResource(R.string.delete),
+                    style = SudokuTextStyles.genericButton)
             }
         },
         dismissButton = {
-            SudokuButton(onClick = onDismissRequest) {
-                Text(text = stringResource(R.string.cancel))
+            SudokuButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onDismissRequest) {
+                Text(text = stringResource(R.string.cancel),
+                    style = SudokuTextStyles.genericButton)
             }
         }
     )

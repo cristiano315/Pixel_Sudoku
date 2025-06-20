@@ -44,7 +44,6 @@ enum class Difficulties {
 enum class GameState{
     LOADING,
     PLAYING,
-    PAUSED,
     WON,
     LOST
 }
@@ -62,6 +61,22 @@ enum class FilterType{
 enum class Results {
     Win,
     Lose
+}
+
+@Suppress("ConstantConditionIf")
+fun Long.toTimeString(): String{
+    if(this < 60L) return this.toString()
+    else{
+        var mins = this / 60
+        var secs = this % 60
+        if (mins < 60L) return "$mins:$secs"
+        else{
+            val hours = this / 3600
+            mins = (this % 3600) / 60
+            secs = this % 60
+            return "$hours:$mins:$secs"
+        }
+    }
 }
 
 //DB

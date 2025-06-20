@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Sudoku</string>
-    <string name="time">Tempo: %1$s</string>
+    <string name="time">"Tempo: "</string>
     <string name="loading">Caricamento</string>
     <string name="errors">Errori:</string>
     <string name="you_lost">Hai perso!</string>
@@ -30,4 +30,8 @@
     <string name="delete_the_game">Eliminare la partita?</string>
     <string name="time_lowest">Tempo:\nMinore</string>
     <string name="time_highest">Tempo:\nMaggiore</string>
+    <string name="home_button">Home</string>
+    <string name="paused">In pausa</string>
+    <string name="resume">Riprendi</string>
+    <string name="quit">Esci</string>
 </resources>

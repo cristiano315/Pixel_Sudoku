@@ -20,6 +20,8 @@ class HistoryViewModel @Inject constructor(private val dao: SavedGameDao): ViewM
     private val _games = MutableStateFlow(listOf(SavedGame(0L)))
     val games: StateFlow<List<SavedGame>> = _games
 
+    private var loadFilter = Pair<FilterType, String>(FilterType.DIFFICULTY, "")
+
     private var sortFilter = SortFilter.TIME_ASCENDING
 
     init {
@@ -28,13 +30,14 @@ class HistoryViewModel @Inject constructor(private val dao: SavedGameDao): ViewM
 
     fun loadGames(filter: String = "", type: FilterType = FilterType.DIFFICULTY, context: Context? = null){
         viewModelScope.launch(Dispatchers.IO) {
-            if(filter.isBlank()){
+            if(context != null) getCorrectFilter(filter, context, type)
+            if(loadFilter.second.isBlank()){
                 _games.value = dao.loadAll().toList()
             }
             else{
-                when(type){
-                    FilterType.DIFFICULTY -> _games.value = dao.loadByDifficulty(getCorrectFilter(filter, context)).toList()
-                    FilterType.RESULT -> _games.value = dao.loadByResult(getCorrectFilter(filter, context)).toList()
+                when(loadFilter.first){
+                    FilterType.DIFFICULTY -> _games.value = dao.loadByDifficulty(loadFilter.second).toList()
+                    FilterType.RESULT -> _games.value = dao.loadByResult(loadFilter.second).toList()
                 }
             }
             sortGames()
@@ -48,8 +51,8 @@ class HistoryViewModel @Inject constructor(private val dao: SavedGameDao): ViewM
         }
     }
 
-    fun getCorrectFilter(filter: String, context: Context?): String{
-        return when(filter){
+    fun getCorrectFilter(filter: String, context: Context?, type: FilterType){
+        var correctFiler: String = when(filter){
             context?.getString(R.string.easy) -> "Easy"
             context?.getString(R.string.medium) -> "Medium"
             context?.getString(R.string.hard) -> "Hard"
@@ -59,6 +62,7 @@ class HistoryViewModel @Inject constructor(private val dao: SavedGameDao): ViewM
 
             else -> ""
         }
+        loadFilter = Pair(type, correctFiler)
     }
 
     fun sortGames(method: String = "", context: Context? = null){

@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Sudoku</string>
-    <string name="time">Time: %1$s</string>
+    <string name="time">"Time: "</string>
     <string name="loading">Loading</string>
     <string name="errors">Errors:</string>
     <string name="you_lost">You lost!</string>
@@ -29,4 +29,8 @@
     <string name="delete_the_game">Delete the game?</string>
     <string name="time_lowest">Time:\nLowest</string>
     <string name="time_highest">Time:\nHighest</string>
+    <string name="home_button">Home</string>
+    <string name="paused">Paused</string>
+    <string name="resume">Resume</string>
+    <string name="quit">Quit</string>
 </resources>
