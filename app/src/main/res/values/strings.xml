@@ -27,10 +27,13 @@
     <string name="losses">Losses</string>
     <string name="confirm">Confirm?</string>
     <string name="delete_the_game">Delete the game?</string>
-    <string name="time_lowest">Time:\nLowest</string>
-    <string name="time_highest">Time:\nHighest</string>
+    <string name="time_lowest">Time: Lowest</string>
+    <string name="time_highest">Time: Highest</string>
     <string name="home_button">Home</string>
     <string name="paused">Paused</string>
     <string name="resume">Resume</string>
     <string name="quit">Quit</string>
+    <string name="error_loading_game_board">Error loading game board</string>
+    <string name="retry">Retry</string>
+    <string name="random">Random</string>
 </resources>

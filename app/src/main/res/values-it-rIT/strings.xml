@@ -28,8 +28,8 @@
     <string name="losses">Sconfitte</string>
     <string name="confirm">Confermi?</string>
     <string name="delete_the_game">Eliminare la partita?</string>
-    <string name="time_lowest">Tempo:\nMinore</string>
-    <string name="time_highest">Tempo:\nMaggiore</string>
+    <string name="time_lowest">Tempo: Minore</string>
+    <string name="time_highest">Tempo: Maggiore</string>
     <string name="home_button">Home</string>
     <string name="paused">In pausa</string>
     <string name="resume">Riprendi</string>

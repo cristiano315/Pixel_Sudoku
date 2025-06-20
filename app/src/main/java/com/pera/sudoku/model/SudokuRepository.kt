@@ -10,9 +10,19 @@ class SudokuRepository @Inject constructor(private val apiService: ApiService) {
 
     suspend fun fetchNewBoardWithDifficulty(difficulty: Difficulties): NewBoard {
         while (true) {
-            val newBoard = apiService.getBoard().newboard
-            if (newBoard.grids[0].difficulty == difficulty.name)
-                return newBoard
+            if(difficulty == Difficulties.Easy){
+                val newBoard = apiService.getManyBoards().newboard
+                newBoard.grids.forEach {
+                    if (it.difficulty == difficulty.name) {
+                        return NewBoard(listOf(it), "", 0)
+                    }
+                }
+            }
+            else{
+                val newBoard = apiService.getBoard().newboard
+                if (newBoard.grids[0].difficulty == difficulty.name)
+                    return newBoard
+            }
         }
     }
 

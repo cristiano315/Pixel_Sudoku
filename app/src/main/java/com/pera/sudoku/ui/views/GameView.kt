@@ -1,6 +1,7 @@
 package com.pera.sudoku.ui.views
 
 import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -47,13 +48,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.pera.sudoku.R
 import com.pera.sudoku.model.GameState
 import com.pera.sudoku.model.toTimeString
+import com.pera.sudoku.ui.navigation.GAME_SCREEN_ROUTE
+import com.pera.sudoku.ui.navigation.HOME_SCREEN_ROUTE
 import com.pera.sudoku.ui.theme.CellBackGroundColor
 import com.pera.sudoku.ui.theme.CellBackGroundFocusedColor
 import com.pera.sudoku.ui.theme.CellBackGroundRelatedColor
@@ -85,9 +87,21 @@ fun GameView(
     val isPaused = viewModel.isPaused.collectAsState()
     val annotationsList = viewModel.cellsAnnotations.collectAsState()
 
+    BackHandler { viewModel.pause() }
     when(gameState.value) {
         GameState.LOADING -> { //wait for data
             SudokuLoading(isPortrait)
+        }
+
+        GameState.LOADING_ERROR -> {
+            CustomPopup(
+                isPortrait = isPortrait,
+                title= stringResource(R.string.error_loading_game_board),
+                firstButtonText = stringResource(R.string.home_button),
+                secondButtonText = stringResource(R.string.retry),
+                onDismissRequest = { navController.navigate(HOME_SCREEN_ROUTE) },
+                secondButtonFunction = { viewModel.restart() }
+            )
         }
 
         GameState.LOST -> { //losescreen
@@ -95,8 +109,8 @@ fun GameView(
                 isPortrait = isPortrait,
                 onNewGame = {
                     viewModel.saveGame()
-                    navController.navigate("gameScreen") {
-                        popUpTo("gameScreen") { inclusive = true }
+                    navController.navigate(GAME_SCREEN_ROUTE) {
+                        popUpTo(GAME_SCREEN_ROUTE) { inclusive = true }
                     }
                 },
                 onQuitGame = {
@@ -106,7 +120,7 @@ fun GameView(
                 isWon = false,
                 onHomeButton = {
                     viewModel.saveGame()
-                    navController.navigate("homeScreen")
+                    navController.navigate(HOME_SCREEN_ROUTE)
                 }
             )
         }
@@ -115,8 +129,8 @@ fun GameView(
             GameEndScreen(isPortrait = isPortrait,
                 onNewGame = {
                     viewModel.saveGame()
-                    navController.navigate("gameScreen") {
-                        popUpTo("gameScreen") { inclusive = true }
+                    navController.navigate(GAME_SCREEN_ROUTE) {
+                        popUpTo(GAME_SCREEN_ROUTE) { inclusive = true }
                     }
                 },
                 onQuitGame = {
@@ -126,7 +140,7 @@ fun GameView(
                 isWon = true,
                 onHomeButton = {
                     viewModel.saveGame()
-                    navController.navigate("homeScreen")
+                    navController.navigate(HOME_SCREEN_ROUTE)
                 })
         }
 
@@ -140,7 +154,6 @@ fun GameView(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     GameTimer(timer.value)
-                    //Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = stringResource(R.string.difficulty) + getTranslatedDifficulty(viewModel.newBoard.grids[0].difficulty),
                         style = SudokuTextStyles.bigTitle
@@ -192,51 +205,16 @@ fun GameView(
             }
 
             if(isPaused.value == true){
-                AlertDialog(
-                    modifier = Modifier
-                        .width((cellSize * 9) + 30.dp)
-                        .height((cellSize * 9) + 120.dp),
-                    onDismissRequest = {
+                CustomPopup(
+                    isPortrait = isPortrait,
+                    title = stringResource(R.string.paused),
+                    firstButtonText = stringResource(R.string.resume),
+                    secondButtonText = stringResource(R.string.quit),
+                    onDismissRequest = { viewModel.resume() },
+                    secondButtonFunction = {
                         viewModel.saveGame()
-                        navController.navigate("homeScreen")
-                    },
-                    title = {
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            text = stringResource(R.string.paused),
-                            style = SudokuTextStyles.veryBigTitle,
-                            textAlign = TextAlign.Center
-                        )
-                    },
-                    text = {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Spacer(modifier = Modifier.weight(1f))
-                            SudokuButton(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(80.dp),
-                                onClick = {viewModel.resume()}
-                            ) {
-                                Text(text = stringResource(R.string.resume),
-                                    style = SudokuTextStyles.genericButton)
-                            }
-                            Spacer(modifier = Modifier.height(10.dp))
-                            SudokuButton(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(80.dp),
-                                onClick = {
-                                    viewModel.saveGame()
-                                    navController.navigate("homeScreen")
-                                }) {
-                                Text(text = stringResource(R.string.quit),
-                                    style = SudokuTextStyles.genericButton)
-                            }
-
-                        }
-                    },
-                    confirmButton = {},
-                    dismissButton = {}
+                        navController.navigate(HOME_SCREEN_ROUTE)
+                    }
                 )
             }
 
@@ -309,6 +287,60 @@ fun GameEndScreen(
     }
 }
 
+@Composable
+fun CustomPopup(isPortrait: Boolean, title: String, firstButtonText: String, secondButtonText: String, onDismissRequest: () -> Unit, secondButtonFunction: () -> Unit){
+    val modifier =
+        if (isPortrait) Modifier
+            .width((cellSize * 9) + 30.dp)
+            .height((cellSize * 9) + 120.dp)
+        else Modifier
+            .width((cellSize * 9) + 30.dp)
+            .height((cellSize * 9) + 120.dp)
+    AlertDialog(
+        modifier = modifier,
+        onDismissRequest = onDismissRequest,
+        title = {
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = title,
+                style = SudokuTextStyles.veryBigTitle,
+                textAlign = TextAlign.Center
+            )
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Spacer(modifier = Modifier.weight(1f))
+                SudokuButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp),
+                    onClick = onDismissRequest
+                ) {
+                    Text(
+                        text = firstButtonText,
+                        style = SudokuTextStyles.genericButton
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                SudokuButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp),
+                    onClick = secondButtonFunction
+                ) {
+                    Text(
+                        text = secondButtonText,
+                        style = SudokuTextStyles.genericButton
+                    )
+                }
+
+            }
+        },
+        confirmButton = {},
+        dismissButton = {}
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
 fun GameEndScreenPreview(){
@@ -376,8 +408,8 @@ fun SudokuCell(
             )
         //draw annotations
         else{
-            Column(modifier = Modifier.fillMaxSize()
-                .offset(y = (-4).dp),
+            Column(modifier = Modifier
+                .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center){
                 for(i in 0 until 3){
@@ -389,7 +421,7 @@ fun SudokuCell(
                                 if(cellAnnotations[index] == true){
                                     Text(
                                         text = (index + 1).toString(),
-                                        fontSize = 8.sp,
+                                        style = SudokuTextStyles.cellAnnotations,
                                         textAlign = TextAlign.Center,
                                         modifier = Modifier.align(Alignment.Center))
                                 }
@@ -400,6 +432,12 @@ fun SudokuCell(
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun SudokuCellPreview(){
+    SudokuCell(0, 0, 0, List(9) { true }, Pair(0, 0), 0) { }
 }
 
 //highlight related cells

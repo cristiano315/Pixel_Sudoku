@@ -57,4 +57,9 @@ object SudokuTextStyles{
         fontSize = 25.sp,
         color = Color.White
     )
+    val cellAnnotations = TextStyle(
+        fontFamily = SudokuFont,
+        fontSize = 16.sp,
+        color = Color.Black
+    )
 }

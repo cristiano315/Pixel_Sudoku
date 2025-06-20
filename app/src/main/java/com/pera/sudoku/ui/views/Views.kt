@@ -11,12 +11,11 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -44,6 +43,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.pera.sudoku.ui.theme.ContentColor
@@ -212,10 +213,20 @@ fun SudokuDropDownMenu(
                     .width(150.dp)
                     .height(60.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = selectedOption, style = textStyle)
-                    Spacer(modifier = Modifier.weight(0.9f))
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    val hasSpaces = selectedOption.contains(" ")
+
+                    Text(
+                        text = selectedOption,
+                        style = textStyle,
+                        maxLines = if(hasSpaces) Int.MAX_VALUE else 1,
+                        softWrap = hasSpaces,
+                        overflow = if(hasSpaces) TextOverflow.Clip else TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.align(Alignment.Center)
+                            .padding(end = 24.dp))
                     Icon(
+                        modifier = Modifier.align(Alignment.CenterEnd),
                         imageVector = Icons.Default.ArrowDropDown,
                         contentDescription = null
                     )
@@ -228,7 +239,7 @@ fun SudokuDropDownMenu(
             ) {
                 options.forEach { option ->
                     DropdownMenuItem(
-                        text = { Text(option) },
+                        text = { Text(option)},
                         onClick = {
                             selectedOption = option
                             expanded = false

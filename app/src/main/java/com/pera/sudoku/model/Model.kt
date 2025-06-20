@@ -43,6 +43,7 @@ enum class Difficulties {
 
 enum class GameState{
     LOADING,
+    LOADING_ERROR,
     PLAYING,
     WON,
     LOST

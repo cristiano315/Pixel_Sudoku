@@ -1,6 +1,7 @@
 package com.pera.sudoku.viewmodels
 
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pera.sudoku.model.Difficulties
@@ -22,10 +23,11 @@ import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
-class GameViewModel @Inject constructor(private val repository: SudokuRepository, private val dao: SavedGameDao) : ViewModel() {
+class GameViewModel @Inject constructor(private val repository: SudokuRepository, private val dao: SavedGameDao, savedStateHandle: SavedStateHandle) : ViewModel() {
     lateinit var newBoard: NewBoard
     private val maxErrors = 2
     private var correctCells = 0
+    val difficultyFilter: String = savedStateHandle["difficulty"] ?: ""
 
     //active board
     private val _board = MutableStateFlow(defaultMatrix)
@@ -71,17 +73,40 @@ class GameViewModel @Inject constructor(private val repository: SudokuRepository
 
     fun startGame() {
         getNewBoard()
-        startTimer()
     }
 
     fun getNewBoard() {
         viewModelScope.launch(Dispatchers.IO) {
             _gameState.value = GameState.LOADING
 
-            val result = repository.fetchNewBoard()
-            newBoard = result
-            _board.value = result.grids[0].value
-            solution = result.grids[0].solution
+            if(difficultyFilter.isEmpty()){
+                try{
+                    val result = repository.fetchNewBoard()
+                    newBoard = result
+                    _board.value = result.grids[0].value
+                    solution = result.grids[0].solution
+                    startTimer()
+                } catch (e: Exception){
+                    _gameState.value = GameState.LOADING_ERROR
+                    timerJob?.cancel()
+                    _timer.value = 0L
+                    return@launch
+                }
+            }
+            else{
+                try{
+                    val result = repository.fetchNewBoardWithDifficulty(Difficulties.valueOf(difficultyFilter))
+                    newBoard = result
+                    _board.value = result.grids[0].value
+                    solution = result.grids[0].solution
+                    startTimer()
+                } catch (e: Exception){
+                    _gameState.value = GameState.LOADING_ERROR
+                    timerJob?.cancel()
+                    _timer.value = 0L
+                    return@launch
+                }
+            }
 
             countCorrectCells()
 
@@ -206,6 +231,10 @@ class GameViewModel @Inject constructor(private val repository: SudokuRepository
 
     fun updateAnnotationState(state: Boolean){
         _isAnnotationActive.value = state
+    }
+
+    fun restart(){
+        startGame()
     }
 
     init {
