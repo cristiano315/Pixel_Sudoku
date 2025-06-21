@@ -12,7 +12,7 @@
     <string name="you_won">Hai vinto!</string>
     <string name="no_games_yet">Ancora nessuna partita</string>
     <string name="date">"Data: "</string>
-    <string name="difficulty">"Difficoltà: "</string>
+    <string name="difficulty">Difficoltà:</string>
     <string name="time_history">"Tempo: "</string>
     <string name="win">Vittoria</string>
     <string name="lose">Sconfitta</string>
@@ -34,4 +34,7 @@
     <string name="paused">In pausa</string>
     <string name="resume">Riprendi</string>
     <string name="quit">Esci</string>
+    <string name="error_loading_game_board">Errore nel caricamento della griglia</string>
+    <string name="retry">Riprova</string>
+    <string name="random">Casuale</string>
 </resources>

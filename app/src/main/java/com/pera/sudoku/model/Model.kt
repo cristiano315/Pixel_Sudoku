@@ -13,28 +13,17 @@ data class Grid(
 
 val defaultMatrix: List<List<Int>> = List(9) { List(9) { 0 } }
 
-val emptyGrid = Grid(
-    difficulty = "easy",
-    solution = defaultMatrix,
-    value = defaultMatrix
-)
-
 data class NewBoard(
     val grids: List<Grid>,
     val message: String,
     val results: Int
 )
 
-val emptyBoard = NewBoard(
-    grids = listOf(emptyGrid),
-    message = "",
-    results = 0
-)
-
 data class Board(
     val newboard: NewBoard
 )
 
+//enums for internal states, avoid problems with strings translations
 enum class Difficulties {
     Hard,
     Medium,
@@ -64,9 +53,10 @@ enum class Results {
     Lose
 }
 
+//function to get time in hh:mm:ss format from a long value
 @Suppress("ConstantConditionIf")
 fun Long.toTimeString(): String{
-    if(this < 60L) return this.toString()
+    if(this < 60L) return this.toString() //don't know why this is marked as always true, the function is working correctly
     else{
         var mins = this / 60
         var secs = this % 60
@@ -80,7 +70,7 @@ fun Long.toTimeString(): String{
     }
 }
 
-//DB
+//DB entity
 @Entity(tableName = "saved_games")
 data class SavedGame(
     @PrimaryKey(autoGenerate = true) var id: Int,

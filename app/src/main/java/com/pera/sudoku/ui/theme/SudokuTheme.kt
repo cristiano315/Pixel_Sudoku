@@ -28,6 +28,12 @@ object SudokuTextStyles{
         fontWeight = FontWeight.Bold,
         color = ContentColor
     )
+    val landscapeTitleScreen = TextStyle(
+        fontFamily = SudokuFont,
+        fontSize = 120.sp,
+        fontWeight = FontWeight.Bold,
+        color = ContentColor
+    )
     val cellNumber = TextStyle(
         fontFamily = SudokuFont,
         fontSize = 35.sp,

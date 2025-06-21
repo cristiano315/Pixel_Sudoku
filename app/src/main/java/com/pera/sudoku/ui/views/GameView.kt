@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -87,16 +88,18 @@ fun GameView(
     val isPaused = viewModel.isPaused.collectAsState()
     val annotationsList = viewModel.cellsAnnotations.collectAsState()
 
+    //pause by pressing back button
     BackHandler { viewModel.pause() }
-    when(gameState.value) {
-        GameState.LOADING -> { //wait for data
-            SudokuLoading(isPortrait)
+    //use of GameState enum to track status, from viewmodel
+    when (gameState.value) {
+        GameState.LOADING -> {
+            SudokuLoading() //wait for data
         }
 
         GameState.LOADING_ERROR -> {
-            CustomPopup(
+            CustomPopup( //handle error fetching data, show to user asking if they want to retry
                 isPortrait = isPortrait,
-                title= stringResource(R.string.error_loading_game_board),
+                title = stringResource(R.string.error_loading_game_board),
                 firstButtonText = stringResource(R.string.home_button),
                 secondButtonText = stringResource(R.string.retry),
                 onDismissRequest = { navController.navigate(HOME_SCREEN_ROUTE) },
@@ -104,7 +107,8 @@ fun GameView(
             )
         }
 
-        GameState.LOST -> { //losescreen
+        GameState.LOST -> {
+            //losescreen
             GameEndScreen(
                 isPortrait = isPortrait,
                 onNewGame = {
@@ -126,7 +130,9 @@ fun GameView(
         }
 
         GameState.WON -> {
-            GameEndScreen(isPortrait = isPortrait,
+            //since lose screen and win screen are basically the same, use same composable function, with different text and actions
+            GameEndScreen(
+                isPortrait = isPortrait,
                 onNewGame = {
                     viewModel.saveGame()
                     navController.navigate(GAME_SCREEN_ROUTE) {
@@ -145,6 +151,7 @@ fun GameView(
         }
 
         GameState.PLAYING -> {
+            val difficulty = viewModel.newBoard.grids[0].difficulty //won't change, no need for stateflow
             if (isPortrait) {
                 Column(
                     modifier = modifier
@@ -153,9 +160,15 @@ fun GameView(
                         .padding(vertical = 30.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    GameTimer(timer.value)
+                    GameTimer(
+                        modifier = Modifier.padding(60.dp),
+                        timer = timer.value
+                    )
+                    //difficulty
                     Text(
-                        text = stringResource(R.string.difficulty) + getTranslatedDifficulty(viewModel.newBoard.grids[0].difficulty),
+                        text = stringResource(R.string.difficulty) + " " + getTranslatedDifficulty(
+                            difficulty
+                        ),
                         style = SudokuTextStyles.bigTitle
                     )
                     SudokuGrid(
@@ -167,12 +180,12 @@ fun GameView(
                     }
                     ErrorBar(errorCount = errorCount.value)
                     //annotations button
-                    SudokuToggleButton(
+                    SudokuToggleButton( //defined in views file, reusable
                         modifier = Modifier
                             .width(60.dp)
                             .height(60.dp)
                             .align(Alignment.End),
-                        onToggle =  {state ->
+                        onToggle = { state ->
                             viewModel.updateAnnotationState(state)
                         }
                     ) {
@@ -181,8 +194,7 @@ fun GameView(
                             contentDescription = null
                         )
                     }
-                    //Spacer(modifier = Modifier.height(70.dp))
-                    NumbersButtonBar { input: Int ->
+                    NumbersButtonBar(isPortrait = true) { input: Int ->
                         viewModel.checkInputNumber(input)
                     }
                     //pause button
@@ -190,7 +202,7 @@ fun GameView(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(80.dp),
-                        onClick = {viewModel.pause()}
+                        onClick = { viewModel.pause() }
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Pause,
@@ -198,13 +210,88 @@ fun GameView(
                         )
                     }
                 }
-            } else {
-                Row {
-                    GameTimer(timer.value)
+            }
+            //landscape layout
+            else {
+                val difficulty =
+                    viewModel.newBoard.grids[0].difficulty //won't change, no need for stateflow
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(ContainerColor)
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Spacer(modifier = Modifier.width(45.dp))
+                    Column(
+                        modifier = Modifier.fillMaxHeight(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Spacer(Modifier.height(20.dp))
+                        Text(
+                            text = stringResource(R.string.difficulty) + "\n" + getTranslatedDifficulty(
+                                difficulty
+                            ),
+                            style = SudokuTextStyles.bigTitle,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(60.dp))
+                        GameTimer(timer = timer.value)
+                        Spacer(modifier = Modifier.height(70.dp))
+                        ErrorBar(errorCount = errorCount.value)
+                    }
+                    Spacer(modifier = Modifier.width(45.dp))
+                    SudokuGrid(
+                        grid = board.value,
+                        focusedCell = focusedCell.value,
+                        annotationsList = annotationsList.value
+                    ) { row: Int, col: Int ->
+                        viewModel.focusCell(row, col)
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column(modifier = Modifier.fillMaxHeight()) {
+                        Spacer(Modifier.height(14.dp))
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            //annotations button
+                            SudokuToggleButton(
+                                modifier = Modifier
+                                    .width(80.dp)
+                                    .height(80.dp),
+                                onToggle = { state ->
+                                    viewModel.updateAnnotationState(state)
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Edit,
+                                    contentDescription = null
+                                )
+                            }
+                            //pause button
+                            SudokuButton(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(80.dp),
+                                onClick = { viewModel.pause() }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Pause,
+                                    contentDescription = null
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(1.dp))
+                        NumbersButtonBar(
+                            isPortrait = false,
+                            modifier = Modifier.padding(4.dp)
+                        ) { input: Int ->
+                            viewModel.checkInputNumber(input)
+                        }
+                    }
                 }
             }
 
-            if(isPaused.value == true){
+            if (isPaused.value == true) {
+                //pause popup screen, should cover board
                 CustomPopup(
                     isPortrait = isPortrait,
                     title = stringResource(R.string.paused),
@@ -218,7 +305,7 @@ fun GameView(
                 )
             }
 
-            ErrorEffect(errorTrigger.value) { viewModel.resetTrigger() }
+            ErrorEffect(errorTrigger.value) { viewModel.resetTrigger() } //animation for wrong input, trigger is set when inputting wrong number
         }
     }
 }
@@ -229,73 +316,82 @@ fun GameEndScreen(
     isWon: Boolean,
     onNewGame: () -> Unit,
     onQuitGame: () -> Unit,
-    onHomeButton: () -> Unit) {
-    if(isPortrait){
-        val buttonWidth = 150.dp
-        val buttonHeight = 80.dp
+    onHomeButton: () -> Unit
+) {
+    val buttonWidth = if (isPortrait) 150.dp else 250.dp
+    val buttonHeight = if (isPortrait) 80.dp else 100.dp
 
-        Box(modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center){
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = if(isWon) stringResource(R.string.you_won) else stringResource(R.string.you_lost),
-                    style = SudokuTextStyles.veryBigTitle
-                )
-                Row{
-                    SudokuButton(
-                        modifier = Modifier
-                            .width(buttonWidth)
-                            .height(buttonHeight),
-                        onClick = onNewGame
-                    ) {
-                        Text(
-                            text = stringResource(R.string.new_game),
-                            style = SudokuTextStyles.genericButton,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(20.dp))
-                    SudokuButton(
-                        modifier = Modifier
-                            .width(buttonWidth)
-                            .height(buttonHeight),
-                        onClick = onQuitGame
-                    ) {
-                        Text(
-                            text = stringResource(R.string.save_and_quit),
-                            style = SudokuTextStyles.genericButton,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                SudokuButton(modifier = Modifier
-                    .width((buttonWidth * 2) + 20.dp)
-                    .height(buttonHeight),
-                    onClick = onHomeButton) {
+    //use a full screen box to center content
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = if (isWon) stringResource(R.string.you_won) else stringResource(R.string.you_lost), //to reuse
+                style = SudokuTextStyles.veryBigTitle
+            )
+            Row {
+                SudokuButton(
+                    modifier = Modifier
+                        .width(buttonWidth)
+                        .height(buttonHeight),
+                    onClick = onNewGame
+                ) {
                     Text(
-                        text = stringResource(R.string.home_button),
+                        text = stringResource(R.string.new_game),
+                        style = SudokuTextStyles.genericButton,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                Spacer(modifier = Modifier.width(20.dp))
+                SudokuButton(
+                    modifier = Modifier
+                        .width(buttonWidth)
+                        .height(buttonHeight),
+                    onClick = onQuitGame
+                ) {
+                    Text(
+                        text = stringResource(R.string.save_and_quit),
                         style = SudokuTextStyles.genericButton,
                         textAlign = TextAlign.Center
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(10.dp))
+            SudokuButton(
+                modifier = Modifier
+                    .width((buttonWidth * 2) + 20.dp)
+                    .height(buttonHeight),
+                onClick = onHomeButton
+            ) {
+                Text(
+                    text = stringResource(R.string.home_button),
+                    style = SudokuTextStyles.genericButton,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
-    }
-    else {
-        //landscape layout
     }
 }
 
 @Composable
-fun CustomPopup(isPortrait: Boolean, title: String, firstButtonText: String, secondButtonText: String, onDismissRequest: () -> Unit, secondButtonFunction: () -> Unit){
+fun CustomPopup(
+    isPortrait: Boolean,
+    title: String,
+    firstButtonText: String,
+    secondButtonText: String,
+    onDismissRequest: () -> Unit,
+    secondButtonFunction: () -> Unit
+) {
     val modifier =
         if (isPortrait) Modifier
             .width((cellSize * 9) + 30.dp)
             .height((cellSize * 9) + 120.dp)
         else Modifier
-            .width((cellSize * 9) + 30.dp)
-            .height((cellSize * 9) + 120.dp)
+            .width((cellSize * 9) + 300.dp)
+            .height((cellSize * 9) + 30.dp)
+    val buttonHeight = if (isPortrait) 80.dp else 60.dp
     AlertDialog(
         modifier = modifier,
         onDismissRequest = onDismissRequest,
@@ -313,7 +409,7 @@ fun CustomPopup(isPortrait: Boolean, title: String, firstButtonText: String, sec
                 SudokuButton(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(80.dp),
+                        .height(buttonHeight),
                     onClick = onDismissRequest
                 ) {
                     Text(
@@ -325,7 +421,7 @@ fun CustomPopup(isPortrait: Boolean, title: String, firstButtonText: String, sec
                 SudokuButton(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(80.dp),
+                        .height(buttonHeight),
                     onClick = secondButtonFunction
                 ) {
                     Text(
@@ -343,7 +439,7 @@ fun CustomPopup(isPortrait: Boolean, title: String, firstButtonText: String, sec
 
 @Preview(showBackground = true)
 @Composable
-fun GameEndScreenPreview(){
+fun GameEndScreenPreview() {
     GameEndScreen(true, true, {}, {}, {})
 }
 
@@ -384,46 +480,49 @@ fun SudokuCell(
     focusedValue: Int,
     onCellClick: () -> Unit,
 ) {
+    //choose background color based on currently focused cell, highlight same numbers and related columns, rows and square
     val backGroundColor = { row: Int, col: Int ->
-        if (Pair(
-                row,
-                col
-            ) == focusedCell || (value == focusedValue && value != 0)
-        ) CellBackGroundFocusedColor
+        if (Pair(row, col) == focusedCell || (value == focusedValue && value != 0)) CellBackGroundFocusedColor
         else if (checkIfRelated(row, col, focusedCell)) CellBackGroundRelatedColor
         else CellBackGroundColor
     }
     Box(
         modifier = Modifier
             .size(cellSize)
-            .sudokuCellBorder(row, col)
+            .sudokuCellBorder(row, col) // custom modifier, uses drawBehind() to draw borders for the grid
             .clickable(onClick = onCellClick)
             .background(color = backGroundColor(row, col)),
         contentAlignment = Alignment.Center,
     ) {
+        //draw number if not empty
         if (value != 0)
             Text(
                 value.toString(),
                 style = SudokuTextStyles.cellNumber
             )
-        //draw annotations
-        else{
-            Column(modifier = Modifier
-                .fillMaxSize(),
+        //draw annotations if no number
+        else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center){
-                for(i in 0 until 3){
+                verticalArrangement = Arrangement.Center
+            ) {
+                for (i in 0 until 3) {
                     Row(modifier = Modifier.wrapContentHeight()) {
-                        for(j in 0 until 3){
+                        for (j in 0 until 3) {
                             val index = (3 * i) + j
-                            Box(modifier = Modifier.size((cellSize / 3)),
-                                contentAlignment = Alignment.Center){
-                                if(cellAnnotations[index] == true){
+                            Box(
+                                modifier = Modifier.size((cellSize / 3)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (cellAnnotations[index] == true) { //use a list of booleans to decide whether to draw annotation or not
                                     Text(
                                         text = (index + 1).toString(),
                                         style = SudokuTextStyles.cellAnnotations,
                                         textAlign = TextAlign.Center,
-                                        modifier = Modifier.align(Alignment.Center))
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
                                 }
                             }
                         }
@@ -436,7 +535,7 @@ fun SudokuCell(
 
 @Preview
 @Composable
-fun SudokuCellPreview(){
+fun SudokuCellPreview() {
     SudokuCell(0, 0, 0, List(9) { true }, Pair(0, 0), 0) { }
 }
 
@@ -448,9 +547,9 @@ fun checkIfRelated(row: Int, col: Int, focusedCell: Pair<Int, Int>): Boolean {
 }
 
 @Composable
-fun GameTimer(timer: Long) {
+fun GameTimer(modifier: Modifier = Modifier, timer: Long) {
     Text(
-        modifier = Modifier.padding(60.dp),
+        modifier = modifier,
         text = stringResource(R.string.time) + timer.toTimeString(),
         style = SudokuTextStyles.bigTitle
     )
@@ -498,53 +597,89 @@ fun Modifier.sudokuCellBorder(row: Int, col: Int): Modifier {
 }
 
 @Composable
-fun SudokuLoading(isPortrait: Boolean) {
-    if(isPortrait){
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                modifier = Modifier.offset(y = (-80).dp),
-                text = stringResource(R.string.loading),
-                style = SudokuTextStyles.veryBigTitle
-            )
-            CircularProgressIndicator(modifier = Modifier.size(60.dp))
-        }
-    }
-    else {
-        //landscape layout
+fun SudokuLoading() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            modifier = Modifier.offset(y = (-80).dp),
+            text = stringResource(R.string.loading),
+            style = SudokuTextStyles.veryBigTitle
+        )
+        CircularProgressIndicator(modifier = Modifier.size(60.dp))
     }
 }
 
 @Composable
-fun NumbersButtonBar(modifier: Modifier = Modifier, onNumberClick: (input: Int) -> Unit) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(10.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        for (value in 1 until 10) {
-            Button(
-                modifier = Modifier
-                    .width(40.dp)
-                    .height(60.dp),
-                shape = RoundedCornerShape(6.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = ContentColor
-                ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp),
-                contentPadding = PaddingValues(0.dp),
-                onClick = { onNumberClick(value) }) {
-                Text(
-                    text = value.toString(),
-                    style = SudokuTextStyles.numberButton
-                )
+fun NumbersButtonBar(
+    modifier: Modifier = Modifier,
+    isPortrait: Boolean,
+    onNumberClick: (input: Int) -> Unit
+) {
+    //portrait layout
+    if (isPortrait) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            for (value in 1 until 10) {
+                Button(
+                    modifier = Modifier
+                        .width(40.dp)
+                        .height(60.dp),
+                    shape = RoundedCornerShape(6.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White,
+                        contentColor = ContentColor
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp),
+                    contentPadding = PaddingValues(0.dp),
+                    onClick = { onNumberClick(value) }) {
+                    Text(
+                        text = value.toString(),
+                        style = SudokuTextStyles.numberButton
+                    )
+                }
             }
         }
     }
+    //landscape layout
+    else {
+        Column(
+            modifier = modifier
+        ) {
+            for (i in 0 until 3) {
+                Row {
+                    for (j in 0 until 3) {
+                        val value = (i * 3) + j + 1
+                        Button(
+                            modifier = Modifier
+                                .width(76.dp)
+                                .height(90.dp),
+                            shape = RoundedCornerShape(6.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.White,
+                                contentColor = ContentColor
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp),
+                            contentPadding = PaddingValues(0.dp),
+                            onClick = { onNumberClick(value) }) {
+                            Text(
+                                text = value.toString(),
+                                style = SudokuTextStyles.numberButton
+                            )
+                        }
+                        if (value != 9) Spacer(modifier = Modifier.width(4.dp))
+                    }
+                }
+                if (i != 2) Spacer(modifier = Modifier.height(4.dp))
+            }
+        }
+    }
+
 }
 
 @Composable
@@ -554,12 +689,14 @@ fun ErrorBar(modifier: Modifier = Modifier, errorCount: Int) {
             text = stringResource(R.string.errors),
             style = SudokuTextStyles.bigTitle
         )
-        repeat(errorCount) {
+        for (i in 1 until 3) {
             Box(
-                modifier = modifier.padding(top = 4.dp),
+                modifier = modifier
+                    .padding(top = 4.dp)
+                    .size(36.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
+                if (i <= errorCount) Icon(
                     modifier = modifier.size(36.dp),
                     imageVector = Icons.Filled.Close,
                     contentDescription = "Error",
@@ -570,6 +707,7 @@ fun ErrorBar(modifier: Modifier = Modifier, errorCount: Int) {
     }
 }
 
+//simple red flash with vibration effect
 @Composable
 fun ErrorEffect(
     trigger: Boolean,
@@ -610,7 +748,7 @@ fun ErrorEffect(
 
 @Composable
 fun getTranslatedDifficulty(difficulty: String): String {
-    return when(difficulty){
+    return when (difficulty) {
         "Hard" -> stringResource(R.string.hard)
         "Medium" -> stringResource(R.string.medium)
         "Easy" -> stringResource(R.string.easy)

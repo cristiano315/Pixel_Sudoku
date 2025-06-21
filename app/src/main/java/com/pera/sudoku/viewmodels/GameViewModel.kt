@@ -1,6 +1,5 @@
 package com.pera.sudoku.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,7 +22,11 @@ import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
-class GameViewModel @Inject constructor(private val repository: SudokuRepository, private val dao: SavedGameDao, savedStateHandle: SavedStateHandle) : ViewModel() {
+class GameViewModel @Inject constructor(
+    private val repository: SudokuRepository,
+    private val dao: SavedGameDao,
+    savedStateHandle: SavedStateHandle
+) : ViewModel() {
     lateinit var newBoard: NewBoard
     private val maxErrors = 2
     private var correctCells = 0
@@ -56,11 +59,10 @@ class GameViewModel @Inject constructor(private val repository: SudokuRepository
     val focusedCell: StateFlow<Pair<Int, Int>> = _focusedCell
 
     //for annotations
-    private val _isAnnotationActive = MutableStateFlow(false)
-    val isAnnotationActive: MutableStateFlow<Boolean> = _isAnnotationActive
+    private var isAnnotationActive = false
 
-    //annotation valuse
-    private val _cellsAnnotations = MutableStateFlow(List(9) {List(9) { List(9) { false } } })
+    //annotation values
+    private val _cellsAnnotations = MutableStateFlow(List(9) { List(9) { List(9) { false } } })
     val cellsAnnotations: MutableStateFlow<List<List<List<Boolean>>>> = _cellsAnnotations
 
     //errors
@@ -79,28 +81,28 @@ class GameViewModel @Inject constructor(private val repository: SudokuRepository
         viewModelScope.launch(Dispatchers.IO) {
             _gameState.value = GameState.LOADING
 
-            if(difficultyFilter.isEmpty()){
-                try{
+            if (difficultyFilter.isEmpty()) { //get a random difficulty
+                try {
                     val result = repository.fetchNewBoard()
                     newBoard = result
                     _board.value = result.grids[0].value
                     solution = result.grids[0].solution
                     startTimer()
-                } catch (e: Exception){
+                } catch (e: Exception) { //set error state
                     _gameState.value = GameState.LOADING_ERROR
                     timerJob?.cancel()
                     _timer.value = 0L
                     return@launch
                 }
-            }
-            else{
-                try{
-                    val result = repository.fetchNewBoardWithDifficulty(Difficulties.valueOf(difficultyFilter))
+            } else {
+                try {
+                    val result =
+                        repository.fetchNewBoardWithDifficulty(Difficulties.valueOf(difficultyFilter))
                     newBoard = result
                     _board.value = result.grids[0].value
                     solution = result.grids[0].solution
                     startTimer()
-                } catch (e: Exception){
+                } catch (e: Exception) {
                     _gameState.value = GameState.LOADING_ERROR
                     timerJob?.cancel()
                     _timer.value = 0L
@@ -108,9 +110,9 @@ class GameViewModel @Inject constructor(private val repository: SudokuRepository
                 }
             }
 
-            countCorrectCells()
+            countCorrectCells() //keep track of current correct cells to determine win, this way avoid rechecking list of values every time
 
-            Log.d("Solution", solution.toString()) //for debug
+            //Log.d("Solution", solution.toString()) //for debug
 
             _gameState.value = GameState.PLAYING
         }
@@ -127,88 +129,84 @@ class GameViewModel @Inject constructor(private val repository: SudokuRepository
         }
     }
 
-    fun countCorrectCells(){
-        correctCells = _board.value.flatten().count { it != 0}
+    fun countCorrectCells() {
+        correctCells = _board.value.flatten().count { it != 0 }
     }
 
-    fun focusCell(row: Int, col: Int){
+    fun focusCell(row: Int, col: Int) {
         _focusedCell.value = Pair(row, col)
     }
 
-    fun checkInputNumber(input: Int){
+    fun checkInputNumber(input: Int) {
         val row = _focusedCell.value.first
         val col = _focusedCell.value.second
         val isEmpty = (_board.value[row][col] == 0)
         val solValue = solution[row][col]
-        if(isEmpty){
-            if(!_isAnnotationActive.value){
-                if(input == solValue){
+        if (isEmpty) {
+            if (!isAnnotationActive) {
+                if (input == solValue) {
                     //rebuild board with updated value
                     _board.value = _board.value.mapIndexed { r, currentRow ->
-                        if (r == row){
-                            currentRow.mapIndexed{ c, currentItem ->
+                        if (r == row) {
+                            currentRow.mapIndexed { c, currentItem ->
                                 if (c == col) solValue
                                 else currentItem
                             }
-                        }
-                        else currentRow
+                        } else currentRow
                     }
                     //rebuild annotations list
                     _cellsAnnotations.value = _cellsAnnotations.value.mapIndexed { r, currentRow ->
-                        if (r == row){
+                        if (r == row) {
                             currentRow.mapIndexed { c, currentList ->
                                 if (c == col) List(9) { false } //remove all annotations
                                 else currentList
                             }
-                        }
-                        else currentRow
+                        } else currentRow
                     }
                     correctCells++
-                    if (correctCells == 81){
+                    if (correctCells == 81) {
                         winGame()
                     }
-                }
-                else {
+                } else {
                     _errorCount.value += 1
                     _errorTrigger.value = true
-                    if(_errorCount.value > maxErrors) loseGame()
+                    if (_errorCount.value > maxErrors) loseGame()
                 }
             }
-            else{ //annotations
+            //annotations
+            else {
                 //rebuild annotations list
                 _cellsAnnotations.value = _cellsAnnotations.value.mapIndexed { r, currentRow ->
-                    if (r == row){
+                    if (r == row) {
                         currentRow.mapIndexed { c, currentList ->
-                            if(c == col){
+                            if (c == col) {
                                 currentList.mapIndexed { index, currentItem ->
-                                    if(index == (input-1)) !currentItem
+                                    if (index == (input - 1)) !currentItem
                                     else currentItem
                                 }
-                            }
-                            else currentList
+                            } else currentList
                         }
-                    }
-                    else currentRow
+                    } else currentRow
                 }
             }
         }
     }
 
-    fun loseGame(){
+    fun loseGame() {
         _gameState.value = GameState.LOST
         timerJob?.cancel()
     }
 
-    fun winGame(){
+    fun winGame() {
         _gameState.value = GameState.WON
         timerJob?.cancel()
     }
 
-    fun resetTrigger(){
+    fun resetTrigger() {
         _errorTrigger.value = false
     }
 
-    fun saveGame(){
+    fun saveGame() {
         val entry = SavedGame(_timer.value)
         entry.result = if (_gameState.value == GameState.WON) Results.Win else Results.Lose
         entry.difficulty = Difficulties.valueOf(newBoard.grids[0].difficulty)
@@ -219,21 +217,21 @@ class GameViewModel @Inject constructor(private val repository: SudokuRepository
         }
     }
 
-    fun pause(){
+    fun pause() {
         _isPaused.value = true
         timerJob?.cancel()
     }
 
-    fun resume(){
+    fun resume() {
         _isPaused.value = false
         startTimer()
     }
 
-    fun updateAnnotationState(state: Boolean){
-        _isAnnotationActive.value = state
+    fun updateAnnotationState(state: Boolean) {
+        isAnnotationActive = state
     }
 
-    fun restart(){
+    fun restart() {
         startGame()
     }
 

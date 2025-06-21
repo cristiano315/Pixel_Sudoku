@@ -130,6 +130,7 @@ fun SudokuButton(
         //another lighter rounded rectangle on top, to simulate higher surface
         BoxWithConstraints { //for proportions
             val width = this.maxWidth - totalBorderSize
+            //height is less if button is not pressed. when button is pressed, match inner rectangle height to simulate 3d press. content will follow new dimensions
             val height =
                 if (isPressed.value) (this.maxHeight - totalBorderSize) else (this.maxHeight - totalBorderSize) * 0.9f
 
@@ -167,6 +168,7 @@ fun SudokuButton(
     }
 }
 
+//animation for home screen pop up
 @Composable
 fun PopUpContent(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
     val scale = remember { Animatable(0f) }
@@ -194,6 +196,7 @@ fun PopUpContent(modifier: Modifier = Modifier, content: @Composable BoxScope.()
     )
 }
 
+//use the custom button to make a dropdown menu
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SudokuDropDownMenu(
@@ -261,6 +264,7 @@ fun SudokuDropDownMenu(
     }
 }
 
+//toggle version of custom button
 @Composable
 fun SudokuToggleButton(
     modifier: Modifier = Modifier,

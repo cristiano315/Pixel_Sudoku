@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -38,6 +39,7 @@ import com.pera.sudoku.model.Difficulties
 import com.pera.sudoku.model.FilterType
 import com.pera.sudoku.model.Results
 import com.pera.sudoku.model.SavedGame
+import com.pera.sudoku.model.toTimeString
 import com.pera.sudoku.ui.theme.ContainerColor
 import com.pera.sudoku.ui.theme.ContentColor
 import com.pera.sudoku.ui.theme.SudokuTextStyles
@@ -51,55 +53,72 @@ fun HistoryView(
     isPortrait: Boolean,
     viewModel: HistoryViewModel = hiltViewModel(),
     navController: NavController
-){
+) {
     val games = viewModel.games.collectAsState()
 
-    if(isPortrait){
-        Column(modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 50.dp)
-            .background(ContainerColor)) {
+    //portrait layout
+    if (isPortrait) {
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(vertical = 50.dp)
+                .background(ContainerColor)
+        ) {
+            val buttonWidth = 120.dp
             Row(modifier = Modifier.fillMaxWidth()) {
                 val selectedOption = remember { mutableStateOf("All") }
                 val selectedOptionFilter = remember { mutableStateOf(FilterType.DIFFICULTY) }
                 val context = LocalContext.current
-                SudokuDropDownMenu(
-                    modifier = Modifier.width(120.dp),
+                SudokuDropDownMenu( //filter type selector
+                    modifier = Modifier.width(buttonWidth),
                     options = listOf(
                         stringResource(R.string.all),
                         stringResource(R.string.difficulty_history), stringResource(R.string.result)
                     )
-                ){selection ->
+                ) { selection ->
                     selectedOption.value = selection
-                    if(selection == context.getString(R.string.difficulty_history)) selectedOptionFilter.value = FilterType.DIFFICULTY
+                    //get global value through a enum, to avoid translation issues
+                    if (selection == context.getString(R.string.difficulty_history)) selectedOptionFilter.value =
+                        FilterType.DIFFICULTY
                     else selectedOptionFilter.value = FilterType.RESULT
                 }
-                SudokuDropDownMenu(
-                    modifier = Modifier.width(120.dp),
-                    options = when(selectedOption.value){
+                SudokuDropDownMenu( //filter selector
+                    modifier = Modifier.width(buttonWidth),
+                    //second menu depends on first
+                    options = when (selectedOption.value) {
                         stringResource(R.string.all) -> listOf("")
-                        stringResource(R.string.difficulty_history) -> listOf(stringResource(R.string.hard), stringResource(R.string.medium), stringResource(R.string.easy))
-                        stringResource(R.string.result) -> listOf(stringResource(R.string.wins), stringResource(R.string.losses))
+                        stringResource(R.string.difficulty_history) -> listOf(
+                            stringResource(R.string.hard),
+                            stringResource(R.string.medium),
+                            stringResource(R.string.easy)
+                        )
+
+                        stringResource(R.string.result) -> listOf(
+                            stringResource(R.string.wins),
+                            stringResource(R.string.losses)
+                        )
+
                         else -> listOf("")
                     }
-                ){filter ->
+                ) { filter ->
                     viewModel.loadGames(filter, selectedOptionFilter.value, context)
                 }
-                SudokuDropDownMenu(
-                    modifier = Modifier.width(120.dp),
+                SudokuDropDownMenu(//sorting selector
+                    modifier = Modifier.width(buttonWidth),
                     options = listOf(
                         stringResource(R.string.time_lowest), stringResource(R.string.time_highest)
                     ),
                     textStyle = SudokuTextStyles.smallGenericButton
-                ){orderMethod ->
+                ) { orderMethod ->
                     viewModel.sortGames(orderMethod, context)
                 }
                 Spacer(modifier = Modifier.weight(1f))
-                SudokuButton(modifier = Modifier
-                    .width(60.dp)
-                    .height(60.dp), onClick = {
-                    navController.popBackStack()
-                }) {
+                SudokuButton(
+                    modifier = Modifier //back button
+                        .width(60.dp)
+                        .height(60.dp), onClick = {
+                        navController.popBackStack()
+                    }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         tint = Color.White,
@@ -108,7 +127,7 @@ fun HistoryView(
                 }
             }
             LazyColumn {
-                if(games.value.isEmpty()){
+                if (games.value.isEmpty()) {
                     item {
                         Text(
                             text = stringResource(R.string.no_games_yet),
@@ -117,10 +136,101 @@ fun HistoryView(
                             textAlign = TextAlign.Center
                         )
                     }
-                }
-                else {
+                } else {
                     items(games.value) { game ->
-                        GameItem(game){
+                        GameItem(game) {
+                            viewModel.deleteGame(game)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    //landscape layout
+    else {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(ContainerColor)
+                .padding(vertical = 10.dp)
+        ) {
+            val buttonWidth = 230.dp
+            val spacerWidth = 4.dp
+            Row(modifier = Modifier.fillMaxWidth()) {
+                val selectedOption = remember { mutableStateOf("All") }
+                val selectedOptionFilter = remember { mutableStateOf(FilterType.DIFFICULTY) }
+                val context = LocalContext.current
+                Spacer(modifier = Modifier.width(spacerWidth))
+                SudokuDropDownMenu( //filter type selector
+                    modifier = Modifier.width(buttonWidth),
+                    options = listOf(
+                        stringResource(R.string.all),
+                        stringResource(R.string.difficulty_history), stringResource(R.string.result)
+                    )
+                ) { selection ->
+                    selectedOption.value = selection
+                    if (selection == context.getString(R.string.difficulty_history)) selectedOptionFilter.value =
+                        FilterType.DIFFICULTY
+                    else selectedOptionFilter.value = FilterType.RESULT
+                }
+                Spacer(modifier = Modifier.width(spacerWidth))
+                SudokuDropDownMenu( //filter selector
+                    modifier = Modifier.width(buttonWidth),
+                    options = when (selectedOption.value) {
+                        stringResource(R.string.all) -> listOf("")
+                        stringResource(R.string.difficulty_history) -> listOf(
+                            stringResource(R.string.hard),
+                            stringResource(R.string.medium),
+                            stringResource(R.string.easy)
+                        )
+
+                        stringResource(R.string.result) -> listOf(
+                            stringResource(R.string.wins),
+                            stringResource(R.string.losses)
+                        )
+
+                        else -> listOf("")
+                    }
+                ) { filter ->
+                    viewModel.loadGames(filter, selectedOptionFilter.value, context)
+                }
+                Spacer(modifier = Modifier.width(spacerWidth))
+                SudokuDropDownMenu(//sorting selector
+                    modifier = Modifier.width(buttonWidth),
+                    options = listOf(
+                        stringResource(R.string.time_lowest), stringResource(R.string.time_highest)
+                    ),
+                    textStyle = SudokuTextStyles.smallGenericButton
+                ) { orderMethod ->
+                    viewModel.sortGames(orderMethod, context)
+                }
+                Spacer(modifier = Modifier.width(spacerWidth))
+                SudokuButton(
+                    modifier = Modifier
+                        .width(200.dp)
+                        .height(60.dp), onClick = {
+                        navController.popBackStack()
+                    }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        tint = Color.White,
+                        contentDescription = null
+                    )
+                }
+            }
+            LazyColumn {
+                if (games.value.isEmpty()) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.no_games_yet),
+                            style = SudokuTextStyles.bigTitle,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    items(games.value) { game ->
+                        GameItem(game) {
                             viewModel.deleteGame(game)
                         }
                     }
@@ -131,18 +241,24 @@ fun HistoryView(
 }
 
 @Composable
-fun ConfirmDialog(onDismissRequest: () -> Unit, deleteGame: () -> Unit){
+fun ConfirmDialog(onDismissRequest: () -> Unit, deleteGame: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(
-            text = stringResource(R.string.confirm),
-            style = SudokuTextStyles.genericButton,
-            color = Color.Black) },
-        text = { Text(
-            text = stringResource(R.string.delete_the_game),
-            style = SudokuTextStyles.genericButton,
-            color = Color.Black,
-            fontSize = 25.sp) },
+        title = {
+            Text(
+                text = stringResource(R.string.confirm),
+                style = SudokuTextStyles.genericButton,
+                color = Color.Black
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(R.string.delete_the_game),
+                style = SudokuTextStyles.genericButton,
+                color = Color.Black,
+                fontSize = 25.sp
+            )
+        },
         confirmButton = {
             SudokuButton(
                 modifier = Modifier.fillMaxWidth(),
@@ -151,16 +267,21 @@ fun ConfirmDialog(onDismissRequest: () -> Unit, deleteGame: () -> Unit){
                     deleteGame()
                 }
             ) {
-                Text(text = stringResource(R.string.delete),
-                    style = SudokuTextStyles.genericButton)
+                Text(
+                    text = stringResource(R.string.delete),
+                    style = SudokuTextStyles.genericButton
+                )
             }
         },
         dismissButton = {
             SudokuButton(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = onDismissRequest) {
-                Text(text = stringResource(R.string.cancel),
-                    style = SudokuTextStyles.genericButton)
+                onClick = onDismissRequest
+            ) {
+                Text(
+                    text = stringResource(R.string.cancel),
+                    style = SudokuTextStyles.genericButton
+                )
             }
         }
     )
@@ -181,20 +302,23 @@ fun GameItem(
             contentColor = ContentColor
         )
     ) {
-        Column(modifier = Modifier
-            .padding(8.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(8.dp)
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = stringResource(R.string.date) + game.date.toItemString(),
+                    text = stringResource(R.string.date) + game.date.toItemString(), //defined in model, for hh:mm:ss
                     style = SudokuTextStyles.gameItem
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                SudokuButton(modifier = Modifier
-                    .width(100.dp)
-                    .height(40.dp),
-                    onClick = {showDialog.value = true}) {
+                SudokuButton(
+                    modifier = Modifier //delete button
+                        .width(100.dp)
+                        .height(40.dp),
+                    onClick = { showDialog.value = true }) {
                     Text(
                         text = stringResource(R.string.delete),
                         style = SudokuTextStyles.genericButton
@@ -202,22 +326,22 @@ fun GameItem(
                 }
             }
             Text(
-                text = stringResource(R.string.difficulty) + getDifficultyString(game.difficulty),
+                text = stringResource(R.string.difficulty) + getDifficultyString(game.difficulty), //for translation
                 style = SudokuTextStyles.gameItem
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically
-            ){
+            ) {
                 Text(
-                    text = stringResource(R.string.time_history) + game.time.toString(),
+                    text = stringResource(R.string.time_history) + game.time.toTimeString(),
                     style = SudokuTextStyles.gameItem
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 //result
                 Text(
-                    text = getResultString(game.result),
+                    text = getResultString(game.result), //for translation
                     style = SudokuTextStyles.gameItem,
-                    color = if(game.result == Results.Win) Color.Green else Color.Red,
+                    color = if (game.result == Results.Win) Color.Green else Color.Red,
                     fontSize = 40.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -225,30 +349,36 @@ fun GameItem(
         }
     }
 
-    if(showDialog.value){
-        ConfirmDialog(onDismissRequest = {
-            showDialog.value = false
-        },
+    if (showDialog.value) {
+        ConfirmDialog(
+            onDismissRequest = {
+                showDialog.value = false
+            },
             deleteGame = { onDeleteRequest(game) }
         )
     }
 }
 
-fun Date.toItemString(): String{
+//get date in dd/mm/yyyy format
+fun Date.toItemString(): String {
     val calendar = Calendar.getInstance()
     calendar.time = this
 
-    return calendar.get(Calendar.DAY_OF_WEEK).toString() + "/" + calendar.get(Calendar.MONTH).toString() + "/" + calendar.get(Calendar.YEAR).toString() + " " + calendar.get(Calendar.HOUR_OF_DAY).toString() + ":" + calendar.get(Calendar.MINUTE).toString()
+    return calendar.get(Calendar.DAY_OF_WEEK).toString() + "/" + calendar.get(Calendar.MONTH)
+        .toString() + "/" + calendar.get(Calendar.YEAR)
+        .toString() + " " + calendar.get(Calendar.HOUR_OF_DAY).toString() + ":" + calendar.get(
+        Calendar.MINUTE
+    ).toString()
 }
 
 @Composable
-fun getResultString(result: Results): String{
-    return if(result == Results.Win) stringResource(R.string.win) else stringResource(R.string.lose)
+fun getResultString(result: Results): String {
+    return if (result == Results.Win) stringResource(R.string.win) else stringResource(R.string.lose)
 }
 
 @Composable
-fun getDifficultyString(difficulty: Difficulties): String{
-    return when(difficulty){
+fun getDifficultyString(difficulty: Difficulties): String {
+    return when (difficulty) {
         Difficulties.Easy -> stringResource(R.string.easy)
         Difficulties.Medium -> stringResource(R.string.medium)
         Difficulties.Hard -> stringResource(R.string.hard)
@@ -258,8 +388,8 @@ fun getDifficultyString(difficulty: Difficulties): String{
 
 @Composable
 @Preview
-fun GameItemPreview(){
+fun GameItemPreview() {
     val game = SavedGame(0, Difficulties.Medium, 0L, Results.Lose, Date(1750279581524))
 
-    GameItem(game){}
+    GameItem(game) {}
 }

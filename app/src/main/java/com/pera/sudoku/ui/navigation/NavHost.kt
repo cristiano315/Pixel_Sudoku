@@ -28,7 +28,8 @@ fun SudokuNavHost(isPortrait: Boolean) {
 
         composable(
             route = "gameScreen/{difficulty}",
-            arguments = listOf(navArgument("difficulty") {type = NavType.StringType})) {
+            arguments = listOf(navArgument("difficulty") { type = NavType.StringType })
+        ) {
             val viewModel: GameViewModel = hiltViewModel()
             GameView(isPortrait = isPortrait, navController = navController, viewModel = viewModel)
         }

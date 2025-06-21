@@ -1,12 +1,13 @@
 package com.pera.sudoku.ui.views
 
+import android.app.Activity
 import android.content.Context
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -40,6 +41,8 @@ fun HomeScreenView(
     var difficulty by remember { mutableStateOf("Hard") }
     val context = LocalContext.current
 
+    BackHandler { (context as? Activity)?.finish() }
+    //portrait layout
     if (isPortrait) {
         Column(
             modifier = modifier
@@ -49,53 +52,89 @@ fun HomeScreenView(
                 .offset(y = 60.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            GameTitle()
+            GameTitle(isPortrait = true)
             Spacer(modifier = Modifier.height(250.dp))
             GenericHomeButton( //start game
                 modifier = Modifier.homeButton(),
                 text = stringResource(R.string.start_game)
             ) {
-                if(difficulty.isEmpty()) navController.navigate(GAME_SCREEN_ROUTE)
+                if (difficulty.isEmpty()) navController.navigate(GAME_SCREEN_ROUTE)
                 else navController.navigate(getGameRouteWithDifficulty(difficulty))
             }
             Spacer(modifier = Modifier.height(10.dp))
+            //difficulty selector
             HomeScreenSelector(
                 modifier = Modifier.homeButton(),
-                options = listOf(stringResource(R.string.hard), stringResource(R.string.medium), stringResource(R.string.easy), stringResource(R.string.random)),
+                options = listOf(
+                    stringResource(R.string.hard),
+                    stringResource(R.string.medium),
+                    stringResource(R.string.easy),
+                    stringResource(R.string.random)
+                ),
             ) { selection ->
-                difficulty = getCorrectDifficultyFilter(selection, context)
+                difficulty = getCorrectDifficultyFilter(selection, context) //for translations
             }
             Spacer(modifier = Modifier.height(10.dp))
-            GenericHomeButton( //start game
+            GenericHomeButton( //go to history
                 modifier = Modifier.homeButton(),
                 text = stringResource(R.string.history)
             ) {
                 navController.navigate(HISTORY_SCREEN_ROUTE)
             }
         }
-    } else {
-        Column(
-            modifier = modifier
+    }
+    //landscape layout
+    else {
+        Row(
+            modifier = Modifier
                 .fillMaxSize()
                 .background(ContainerColor)
-                .padding(vertical = 30.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            GameTitle()
-            Row(modifier = Modifier.fillMaxWidth()) {
+            Spacer(modifier = Modifier.width(100.dp))
+            GameTitle(isPortrait = false)
+            Spacer(modifier = Modifier.width(110.dp))
+            Column {
+                GenericHomeButton( //start game
+                    modifier = Modifier.homeButton(),
+                    text = stringResource(R.string.start_game)
+                ) {
+                    if (difficulty.isEmpty()) navController.navigate(GAME_SCREEN_ROUTE)
+                    else navController.navigate(getGameRouteWithDifficulty(difficulty))
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                HomeScreenSelector(
+                    modifier = Modifier.homeButton(),
+                    options = listOf(
+                        stringResource(R.string.hard),
+                        stringResource(R.string.medium),
+                        stringResource(R.string.easy),
+                        stringResource(R.string.random)
+                    ),
+                ) { selection ->
+                    difficulty = getCorrectDifficultyFilter(selection, context)
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                GenericHomeButton(
+                    modifier = Modifier.homeButton(),
+                    text = stringResource(R.string.history)
+                ) {
+                    navController.navigate(HISTORY_SCREEN_ROUTE)
+                }
             }
         }
     }
 }
 
 @Composable
-fun GameTitle(modifier: Modifier = Modifier) {
-    PopUpContent(modifier) {
+fun GameTitle(modifier: Modifier = Modifier, isPortrait: Boolean) {
+    PopUpContent(modifier) { //everything is wrapped in this to have a homogeneous animation, in views file
         Text(
             text = "PIXEL\nSUDOKU", //no need for translation
             modifier = modifier,
             textAlign = TextAlign.Center,
-            style = SudokuTextStyles.titleScreen
+            style = if (isPortrait) SudokuTextStyles.titleScreen else SudokuTextStyles.landscapeTitleScreen
         )
     }
 }
@@ -103,7 +142,7 @@ fun GameTitle(modifier: Modifier = Modifier) {
 @Composable
 fun GenericHomeButton(modifier: Modifier = Modifier, text: String, startGame: () -> Unit) {
     PopUpContent(modifier) {
-        SudokuButton(modifier = modifier, onClick = startGame) {
+        SudokuButton(modifier = modifier, onClick = startGame) { //custom button, in views file
             Text(
                 text = text,
                 style = SudokuTextStyles.homeButton
@@ -113,7 +152,11 @@ fun GenericHomeButton(modifier: Modifier = Modifier, text: String, startGame: ()
 }
 
 @Composable
-fun HomeScreenSelector(modifier: Modifier = Modifier, options: List<String>, onOptionSelected: (String) -> Unit){
+fun HomeScreenSelector(
+    modifier: Modifier = Modifier,
+    options: List<String>,
+    onOptionSelected: (String) -> Unit
+) {
     PopUpContent(modifier) {
         SudokuDropDownMenu(
             modifier = Modifier.homeButton(),
@@ -125,7 +168,7 @@ fun HomeScreenSelector(modifier: Modifier = Modifier, options: List<String>, onO
 }
 
 @Composable
-fun Modifier.homeButton(): Modifier{
+fun Modifier.homeButton(): Modifier { // custom modifier, all buttons have same dimensions
     val buttonWidth = 400.dp
     val buttonHeight = 100.dp
     return this
@@ -133,8 +176,8 @@ fun Modifier.homeButton(): Modifier{
         .height(buttonHeight)
 }
 
-fun getCorrectDifficultyFilter(value: String, context: Context? = null): String{
-    return when(value){
+fun getCorrectDifficultyFilter(value: String, context: Context? = null): String {
+    return when (value) {
         context?.getString(R.string.hard) -> "Hard"
         context?.getString(R.string.medium) -> "Medium"
         context?.getString(R.string.easy) -> "Easy"

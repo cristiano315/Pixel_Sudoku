@@ -11,7 +11,7 @@
     <string name="you_won">You won!</string>
     <string name="no_games_yet">No games yet</string>
     <string name="date">"Date: "</string>
-    <string name="difficulty">"Difficulty: "</string>
+    <string name="difficulty">"Difficulty:"</string>
     <string name="time_history">"Time: "</string>
     <string name="win">Win</string>
     <string name="lose">Lose</string>
