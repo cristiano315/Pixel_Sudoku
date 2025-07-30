@@ -57,6 +57,7 @@ import com.pera.sudoku.model.GameState
 import com.pera.sudoku.model.toTimeString
 import com.pera.sudoku.ui.navigation.GAME_SCREEN_ROUTE
 import com.pera.sudoku.ui.navigation.HOME_SCREEN_ROUTE
+import com.pera.sudoku.ui.navigation.getGameRouteWithDifficulty
 import com.pera.sudoku.ui.theme.CellBackGroundColor
 import com.pera.sudoku.ui.theme.CellBackGroundFocusedColor
 import com.pera.sudoku.ui.theme.CellBackGroundRelatedColor
@@ -113,8 +114,8 @@ fun GameView(
                 isPortrait = isPortrait,
                 onNewGame = {
                     viewModel.saveGame()
-                    navController.navigate(GAME_SCREEN_ROUTE) {
-                        popUpTo(GAME_SCREEN_ROUTE) { inclusive = true }
+                    navController.navigate(getGameRouteWithDifficulty(viewModel.newBoard.grids[0].difficulty)) {
+                        popUpTo(getGameRouteWithDifficulty(viewModel.newBoard.grids[0].difficulty)) { inclusive = true }
                     }
                 },
                 onQuitGame = {

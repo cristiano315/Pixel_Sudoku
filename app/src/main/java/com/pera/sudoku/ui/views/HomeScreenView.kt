@@ -4,13 +4,19 @@ import android.app.Activity
 import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,16 +26,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.pera.sudoku.R
 import com.pera.sudoku.ui.navigation.GAME_SCREEN_ROUTE
 import com.pera.sudoku.ui.navigation.HISTORY_SCREEN_ROUTE
 import com.pera.sudoku.ui.navigation.getGameRouteWithDifficulty
 import com.pera.sudoku.ui.theme.ContainerColor
+import com.pera.sudoku.ui.theme.DynamicMaxTextSize
 import com.pera.sudoku.ui.theme.SudokuTextStyles
 
 @Composable
@@ -44,68 +54,33 @@ fun HomeScreenView(
     BackHandler { (context as? Activity)?.finish() }
     //portrait layout
     if (isPortrait) {
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .background(ContainerColor)
-                .padding(vertical = 30.dp)
-                .offset(y = 60.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            GameTitle(isPortrait = true)
-            Spacer(modifier = Modifier.height(250.dp))
-            GenericHomeButton( //start game
-                modifier = Modifier.homeButton(),
-                text = stringResource(R.string.start_game)
-            ) {
-                if (difficulty.isEmpty()) navController.navigate(GAME_SCREEN_ROUTE)
-                else navController.navigate(getGameRouteWithDifficulty(difficulty))
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            //difficulty selector
-            HomeScreenSelector(
-                modifier = Modifier.homeButton(),
-                options = listOf(
-                    stringResource(R.string.hard),
-                    stringResource(R.string.medium),
-                    stringResource(R.string.easy),
-                    stringResource(R.string.random)
-                ),
-            ) { selection ->
-                difficulty = getCorrectDifficultyFilter(selection, context) //for translations
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            GenericHomeButton( //go to history
-                modifier = Modifier.homeButton(),
-                text = stringResource(R.string.history)
-            ) {
-                navController.navigate(HISTORY_SCREEN_ROUTE)
-            }
-        }
-    }
-    //landscape layout
-    else {
-        Row(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .background(ContainerColor)
-                .padding(10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Spacer(modifier = Modifier.width(100.dp))
-            GameTitle(isPortrait = false)
-            Spacer(modifier = Modifier.width(110.dp))
-            Column {
+                .padding(WindowInsets.statusBars.asPaddingValues()),
+        )
+        {
+            val screenHeight = maxHeight
+            Column(
+                modifier = modifier
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(screenHeight * 0.05f))
+                GameTitle(isPortrait = true)
+                Spacer(modifier = Modifier.height(screenHeight * 0.3f))
                 GenericHomeButton( //start game
-                    modifier = Modifier.homeButton(),
+                    modifier = Modifier.homeButton(screenHeight = screenHeight),
                     text = stringResource(R.string.start_game)
                 ) {
                     if (difficulty.isEmpty()) navController.navigate(GAME_SCREEN_ROUTE)
                     else navController.navigate(getGameRouteWithDifficulty(difficulty))
                 }
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                //difficulty selector
                 HomeScreenSelector(
-                    modifier = Modifier.homeButton(),
+                    modifier = Modifier.homeButton(screenHeight = screenHeight),
                     options = listOf(
                         stringResource(R.string.hard),
                         stringResource(R.string.medium),
@@ -113,17 +88,66 @@ fun HomeScreenView(
                         stringResource(R.string.random)
                     ),
                 ) { selection ->
-                    difficulty = getCorrectDifficultyFilter(selection, context)
+                    difficulty = getCorrectDifficultyFilter(selection, context) //for translations
                 }
-                Spacer(modifier = Modifier.height(10.dp))
-                GenericHomeButton(
-                    modifier = Modifier.homeButton(),
+                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                GenericHomeButton( //go to history
+                    modifier = Modifier.homeButton(screenHeight = screenHeight),
                     text = stringResource(R.string.history)
                 ) {
                     navController.navigate(HISTORY_SCREEN_ROUTE)
                 }
             }
         }
+    }
+    //landscape layout
+    else {
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(ContainerColor)
+                .padding(WindowInsets.statusBars.asPaddingValues())
+        )
+            {
+                val screenWidth = maxWidth
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Spacer(modifier = Modifier.width(screenWidth * 0.1f))
+                    GameTitle(isPortrait = false)
+                    Spacer(modifier = Modifier.width(screenWidth * 0.11f))
+                    Column {
+                        GenericHomeButton( //start game
+                            modifier = Modifier.homeButton(screenWidth = screenWidth),
+                            text = stringResource(R.string.start_game)
+                        ) {
+                            if (difficulty.isEmpty()) navController.navigate(GAME_SCREEN_ROUTE)
+                            else navController.navigate(getGameRouteWithDifficulty(difficulty))
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        HomeScreenSelector(
+                            modifier = Modifier.homeButton(screenWidth = screenWidth),
+                            options = listOf(
+                                stringResource(R.string.hard),
+                                stringResource(R.string.medium),
+                                stringResource(R.string.easy),
+                                stringResource(R.string.random)
+                            ),
+                        ) { selection ->
+                            difficulty = getCorrectDifficultyFilter(selection, context)
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        GenericHomeButton(
+                            modifier = Modifier.homeButton(screenWidth = screenWidth),
+                            text = stringResource(R.string.history)
+                        ) {
+                            navController.navigate(HISTORY_SCREEN_ROUTE)
+                        }
+                    }
+                }
+            }
     }
 }
 
@@ -145,7 +169,8 @@ fun GenericHomeButton(modifier: Modifier = Modifier, text: String, startGame: ()
         SudokuButton(modifier = modifier, onClick = startGame) { //custom button, in views file
             Text(
                 text = text,
-                style = SudokuTextStyles.homeButton
+                style = SudokuTextStyles.homeButton,
+                //fontSize = DynamicMaxTextSize(55.sp, 55.sp)
             )
         }
     }
@@ -159,7 +184,7 @@ fun HomeScreenSelector(
 ) {
     PopUpContent(modifier) {
         SudokuDropDownMenu(
-            modifier = Modifier.homeButton(),
+            modifier = modifier,
             options = options,
             textStyle = SudokuTextStyles.homeButton,
             onOptionSelected = onOptionSelected,
@@ -168,12 +193,20 @@ fun HomeScreenSelector(
 }
 
 @Composable
-fun Modifier.homeButton(): Modifier { // custom modifier, all buttons have same dimensions
-    val buttonWidth = 400.dp
-    val buttonHeight = 100.dp
-    return this
-        .width(buttonWidth)
-        .height(buttonHeight)
+fun Modifier.homeButton(screenHeight: Dp = 0.dp, screenWidth: Dp = 0.dp): Modifier { // custom modifier, all buttons have same dimensions
+    if(screenHeight != 0.dp) //portrait mode
+    {
+        val buttonHeight = screenHeight * 0.11f
+        return this
+            .fillMaxWidth()
+            .height(buttonHeight)
+    }
+    else {
+        val buttonWidth = screenWidth * 0.4f
+        return this
+            .width(buttonWidth)
+            .height(buttonWidth / 4)
+    }
 }
 
 fun getCorrectDifficultyFilter(value: String, context: Context? = null): String {
